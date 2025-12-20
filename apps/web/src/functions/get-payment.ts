@@ -4,12 +4,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 
 export const getPayment = createServerFn({ method: "GET" })
-	.middleware([authMiddleware])
-	.handler(async () => {
-		const { data: customerState } = await authClient.customer.state({
-			fetchOptions: {
-				headers: getRequestHeaders(),
-			},
-		});
-		return customerState;
-	});
+  .middleware([authMiddleware])
+  .handler(async () => {
+    const { data: customerState } = await authClient.customer.state({
+      fetchOptions: {
+        headers: getRequestHeaders(),
+      },
+    });
+    return customerState;
+  });

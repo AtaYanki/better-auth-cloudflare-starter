@@ -5,8 +5,11 @@ import tailwindcss from "@tailwindcss/vite";
 import viteReact from "@vitejs/plugin-react";
 
 export default defineConfig({
-	plugins: [tsconfigPaths(), tailwindcss(), tanstackStart(), viteReact()],
-	server: {
-		port: 3001,
-	},
+  plugins: [tsconfigPaths(), tailwindcss(), tanstackStart(), viteReact()],
+  server: {
+    port: 3001,
+  },
+  ssr: {
+    noExternal: ["@daveyplate/better-auth-ui", "@hcaptcha/react-hcaptcha"],
+  },
 });

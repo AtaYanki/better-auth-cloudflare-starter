@@ -6,9 +6,10 @@
     "build": "tsdown",
     "check-types": "tsc -b",
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
-    "dev": "alchemy dev",
-    "deploy": "alchemy deploy",
-    "destroy": "alchemy destroy"
+    "dev": "wrangler dev --port 3000",
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy --env production",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
     "hono": "catalog:",
@@ -25,9 +26,7 @@
     "typescript": "catalog:",
     "tsdown": "^0.16.5",
     "@my-better-t-appp/config": "workspace:*",
-    "alchemy": "^0.81.2",
     "wrangler": "^4.54.0",
-    "@types/node": "catalog:",
-    "@cloudflare/workers-types": "catalog:"
+    "@types/node": "catalog:"
   }
 }

@@ -14,6 +14,7 @@ export const Route = createFileRoute("/dashboard")({
 		return { session, customerState };
 	},
 	loader: async ({ context }) => {
+		console.log("context", context);
 		if (!context.session) {
 			throw redirect({
 				to: "/login",
@@ -41,7 +42,7 @@ function RouteComponent() {
 			{hasProSubscription ? (
 				<Button
 					onClick={async function handlePortal() {
-						await authClient.customer.portal();
+						// await authClient.customer.portal();
 					}}
 				>
 					Manage Subscription
@@ -49,7 +50,7 @@ function RouteComponent() {
 			) : (
 				<Button
 					onClick={async function handleUpgrade() {
-						await authClient.checkout({ slug: "pro" });
+						// await authClient.checkout({ slug: "pro" });
 					}}
 				>
 					Upgrade to Pro

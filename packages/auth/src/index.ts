@@ -1,61 +1,127 @@
+import {
+  SignInOTPEmail,
+  OTPVerificationEmail,
+  PasswordResetOTPEmail,
+} from "@my-better-t-appp/transactional/emails";
+import { Resend } from "resend";
+import { env } from "cloudflare:workers";
 import { betterAuth } from "better-auth";
+import { db } from "@my-better-t-appp/db";
+import { polarClient } from "./lib/payments";
+import { emailOTP } from "better-auth/plugins";
+import * as schema from "@my-better-t-appp/db/schema/auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-import { polarClient } from "./lib/payments";
-import { db } from "@my-better-t-appp/db";
-import * as schema from "@my-better-t-appp/db/schema/auth";
-import { env } from "cloudflare:workers";
+
+const resend = new Resend(env.RESEND_API_KEY);
 
 export const auth = betterAuth({
-	database: drizzleAdapter(db, {
-		provider: "pg",
+  database: drizzleAdapter(db, {
+    provider: "pg",
 
-		schema: schema,
-	}),
-	trustedOrigins: [env.CORS_ORIGIN],
-	emailAndPassword: {
-		enabled: true,
-	},
-	// uncomment cookieCache setting when ready to deploy to Cloudflare using *.workers.dev domains
-	// session: {
-	//   cookieCache: {
-	//     enabled: true,
-	//     maxAge: 60,
-	//   },
-	// },
-	secret: env.BETTER_AUTH_SECRET,
-	baseURL: env.BETTER_AUTH_URL,
-	advanced: {
-		defaultCookieAttributes: {
-			sameSite: "none",
-			secure: true,
-			httpOnly: true,
-		},
-		// uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain
-		// https://developers.cloudflare.com/workers/wrangler/configuration/#workersdev
-		// crossSubDomainCookies: {
-		//   enabled: true,
-		//   domain: "<your-workers-subdomain>",
-		// },
-	},
-	plugins: [
-		polar({
-			client: polarClient,
-			createCustomerOnSignUp: true,
-			enableCustomerPortal: true,
-			use: [
-				checkout({
-					products: [
-						{
-							productId: "your-product-id",
-							slug: "pro",
-						},
-					],
-					successUrl: env.POLAR_SUCCESS_URL,
-					authenticatedUsersOnly: true,
-				}),
-				portal(),
-			],
-		}),
-	],
+    schema: schema,
+  }),
+  trustedOrigins: [env.CORS_ORIGIN],
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: true,
+  },
+  // uncomment cookieCache setting when ready to deploy to Cloudflare using *.workers.dev domains
+  // session: {
+  //   cookieCache: {
+  //     enabled: true,
+  //     maxAge: 60,
+  //   },
+  // },
+  secret: env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL,
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
+    // uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain
+    // https://developers.cloudflare.com/workers/wrangler/configuration/#workersdev
+    // crossSubDomainCookies: {
+    //   enabled: true,
+    //   domain: "<your-workers-subdomain>",
+    // },
+  },
+  plugins: [
+    emailOTP({
+      sendVerificationOnSignUp: true,
+      overrideDefaultEmailVerification: true,
+      async sendVerificationOTP({ email, otp, type }, ctx) {
+        if (type === "sign-in") {
+          // Send the OTP for sign in
+          console.log("Sending OTP for sign in", email, otp);
+
+          await resend.emails.send({
+            from: "BetterAuth <onboarding@resend.dev>",
+            to: email,
+            subject: `${otp} is your sign in code`,
+            react: SignInOTPEmail({
+              otpCode: otp,
+              expiryMinutes: "10",
+              userEmail: email,
+              loginTime: new Date().toLocaleString(),
+              loginLocation:
+                ctx?.request?.headers.get("x-forwarded-for") || null,
+              deviceInfo: ctx?.request?.headers.get("user-agent") || null,
+              ipAddress: ctx?.request?.headers.get("x-forwarded-for") || null,
+            }),
+          });
+        } else if (type === "email-verification") {
+          // Send the OTP for email verification
+          console.log("Sending OTP for email verification", email, otp);
+
+          // await resend.emails.send({
+          //   from: "BetterAuth <onboarding@resend.dev>",
+          //   to: email,
+          //   subject: `${otp} is your verification code`,
+          //   react: OTPVerificationEmail({
+          //     otpCode: otp,
+          //     expiryMinutes: "10",
+          //     userEmail: email,
+          //   }),
+          // });
+        } else {
+          // Send the OTP for password reset
+          console.log("Sending OTP for password reset", email, otp);
+
+          await resend.emails.send({
+            from: "BetterAuth <onboarding@resend.dev>",
+            to: email,
+            subject: `${otp} is your password reset code`,
+            react: PasswordResetOTPEmail({
+              otpCode: otp,
+              expiryMinutes: "10",
+              userEmail: email,
+              requestDate: new Date().toLocaleString(),
+              requestIP: ctx?.request?.headers.get("x-forwarded-for") || null,
+            }),
+          });
+        }
+      },
+    }),
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: false,
+      enableCustomerPortal: true,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: "your-product-id",
+              slug: "pro",
+            },
+          ],
+          successUrl: env.POLAR_SUCCESS_URL,
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+      ],
+    }),
+  ],
 });
