@@ -1,5 +1,5 @@
 {
-  "name": "my-better-t-appp",
+  "name": "better-auth-cloudflare-starter",
   "private": true,
   "type": "module",
   "workspaces": {
@@ -27,10 +27,10 @@
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",
-    "db:push": "turbo -F @my-better-t-appp/db db:push",
-    "db:studio": "turbo -F @my-better-t-appp/db db:studio",
-    "db:generate": "turbo -F @my-better-t-appp/db db:generate",
-    "db:migrate": "turbo -F @my-better-t-appp/db db:migrate"
+    "db:push": "turbo -F @better-auth-cloudflare-starter/db db:push",
+    "db:studio": "turbo -F @better-auth-cloudflare-starter/db db:studio",
+    "db:generate": "turbo -F @better-auth-cloudflare-starter/db db:generate",
+    "db:migrate": "turbo -F @better-auth-cloudflare-starter/db db:migrate"
   },
   "dependencies": {
     "dotenv": "catalog:",

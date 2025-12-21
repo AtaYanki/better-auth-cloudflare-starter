@@ -2,15 +2,15 @@ import {
   SignInOTPEmail,
   OTPVerificationEmail,
   PasswordResetOTPEmail,
-} from "@my-better-t-appp/transactional/emails";
+} from "@better-auth-cloudflare-starter/transactional/emails";
 import { Resend } from "resend";
 import { env } from "cloudflare:workers";
 import { betterAuth } from "better-auth";
-import { db } from "@my-better-t-appp/db";
+import { db } from "@better-auth-cloudflare-starter/db";
 import { polarClient } from "./lib/payments";
-import { emailOTP } from "better-auth/plugins";
-import * as schema from "@my-better-t-appp/db/schema/auth";
+import * as schema from "@better-auth-cloudflare-starter/db/schema/auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { emailOTP, haveIBeenPwned } from "better-auth/plugins";
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 
 const resend = new Resend(env.RESEND_API_KEY);
@@ -18,13 +18,13 @@ const resend = new Resend(env.RESEND_API_KEY);
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
-
     schema: schema,
   }),
   trustedOrigins: [env.CORS_ORIGIN],
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    autoSignInAfterVerification: true,
   },
   // uncomment cookieCache setting when ready to deploy to Cloudflare using *.workers.dev domains
   // session: {
@@ -51,7 +51,6 @@ export const auth = betterAuth({
   plugins: [
     emailOTP({
       sendVerificationOnSignUp: true,
-      overrideDefaultEmailVerification: true,
       async sendVerificationOTP({ email, otp, type }, ctx) {
         if (type === "sign-in") {
           // Send the OTP for sign in
@@ -104,6 +103,9 @@ export const auth = betterAuth({
           });
         }
       },
+    }),
+    haveIBeenPwned({
+      customPasswordCompromisedMessage: "Please choose a more secure password",
     }),
     polar({
       client: polarClient,

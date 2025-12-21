@@ -2,10 +2,10 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { env } from "cloudflare:workers";
-import { auth } from "@my-better-t-appp/auth";
+import { auth } from "@better-auth-cloudflare-starter/auth";
 import { trpcServer } from "@hono/trpc-server";
-import { createContext } from "@my-better-t-appp/api/context";
-import { appRouter } from "@my-better-t-appp/api/routers/index";
+import { createContext } from "@better-auth-cloudflare-starter/api/context";
+import { appRouter } from "@better-auth-cloudflare-starter/api/routers/index";
 
 const app = new Hono();
 

@@ -1,5 +1,5 @@
 {
-  "name": "@my-better-t-appp/db",
+  "name": "@better-auth-cloudflare-starter/db",
   "type": "module",
   "exports": {
     ".": {
@@ -19,7 +19,7 @@
     "drizzle-kit": "^0.31.8",
     "@types/ws": "^8.18.1",
     "typescript": "catalog:",
-    "@my-better-t-appp/config": "workspace:*"
+    "@better-auth-cloudflare-starter/config": "workspace:*"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",

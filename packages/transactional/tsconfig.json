@@ -1,5 +1,5 @@
 {
-	"extends": "@my-better-t-appp/config/tsconfig.base.json",
+	"extends": "@better-auth-cloudflare-starter/config/tsconfig.base.json",
 	"compilerOptions": {
 		"declaration": true,
 		"declarationMap": true,

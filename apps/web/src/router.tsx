@@ -10,7 +10,7 @@ import {
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { toast } from "sonner";
-import type { AppRouter } from "@my-better-t-appp/api/routers/index";
+import type { AppRouter } from "@better-auth-cloudflare-starter/api/routers/index";
 import { TRPCProvider } from "./utils/trpc";
 
 export const queryClient = new QueryClient({

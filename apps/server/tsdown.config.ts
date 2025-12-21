@@ -5,5 +5,5 @@ export default defineConfig({
 	format: "esm",
 	outDir: "./dist",
 	clean: true,
-	noExternal: [/@my-better-t-appp\/.*/],
+	noExternal: [/@better-auth-cloudflare-starter\/.*/],
 });
