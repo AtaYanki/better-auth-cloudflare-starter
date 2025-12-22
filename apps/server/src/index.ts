@@ -2,8 +2,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { env } from "cloudflare:workers";
-import { auth } from "@better-auth-cloudflare-starter/auth";
 import { trpcServer } from "@hono/trpc-server";
+import { auth } from "@better-auth-cloudflare-starter/auth";
 import { createContext } from "@better-auth-cloudflare-starter/api/context";
 import { appRouter } from "@better-auth-cloudflare-starter/api/routers/index";
 

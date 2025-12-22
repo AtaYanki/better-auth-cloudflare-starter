@@ -1,21 +1,18 @@
-import { Toaster } from "@/components/ui/sonner";
-
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-
 import {
   HeadContent,
   Outlet,
   Scripts,
   createRootRouteWithContext,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import Header from "../components/header";
 import appCss from "../index.css?url";
-import type { QueryClient } from "@tanstack/react-query";
-
-import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
-import type { AppRouter } from "@my-better-t-appp/api/routers/index";
+import Header from "../components/header";
+import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
+import type { QueryClient } from "@tanstack/react-query";
+import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import type { AppRouter } from "@better-auth-cloudflare-starter/api/routers/index";
 
 export interface RouterAppContext {
   trpc: TRPCOptionsProxy<AppRouter>;
@@ -61,8 +58,8 @@ function RootDocument() {
           </div>
         </Providers>
         <Toaster richColors />
-        <TanStackRouterDevtools position="bottom-left" />
-        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+        {/* <TanStackRouterDevtools position="bottom-left" />
+        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" /> */}
         <Scripts />
       </body>
     </html>

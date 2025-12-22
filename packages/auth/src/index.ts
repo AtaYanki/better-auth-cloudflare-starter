@@ -6,12 +6,12 @@ import {
 import { Resend } from "resend";
 import { env } from "cloudflare:workers";
 import { betterAuth } from "better-auth";
-import { db } from "@better-auth-cloudflare-starter/db";
 import { polarClient } from "./lib/payments";
-import * as schema from "@better-auth-cloudflare-starter/db/schema/auth";
+import { db } from "@better-auth-cloudflare-starter/db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { emailOTP, haveIBeenPwned } from "better-auth/plugins";
+import { admin, emailOTP, haveIBeenPwned } from "better-auth/plugins";
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+import * as schema from "@better-auth-cloudflare-starter/db/schema/auth";
 
 const resend = new Resend(env.RESEND_API_KEY);
 
@@ -21,6 +21,30 @@ export const auth = betterAuth({
     schema: schema,
   }),
   trustedOrigins: [env.CORS_ORIGIN],
+  user: {
+    changeEmail: {
+      enabled: true,
+      sendChangeEmailConfirmation: async ({ user, url, token }, request) => {
+        console.log(
+          "Sending change email confirmation",
+          user,
+          url,
+          token,
+          request
+        );
+        await resend.emails.send({
+          from: "BetterAuth <onboarding@resend.dev>",
+          to: user.email,
+          subject: "Confirm your email address",
+          react: OTPVerificationEmail({
+            otpCode: token,
+            expiryMinutes: "10",
+            userEmail: user.email,
+          }),
+        });
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
@@ -49,6 +73,10 @@ export const auth = betterAuth({
     // },
   },
   plugins: [
+    admin(),
+    haveIBeenPwned({
+      customPasswordCompromisedMessage: "Please choose a more secure password",
+    }),
     emailOTP({
       sendVerificationOnSignUp: true,
       async sendVerificationOTP({ email, otp, type }, ctx) {
@@ -75,16 +103,16 @@ export const auth = betterAuth({
           // Send the OTP for email verification
           console.log("Sending OTP for email verification", email, otp);
 
-          // await resend.emails.send({
-          //   from: "BetterAuth <onboarding@resend.dev>",
-          //   to: email,
-          //   subject: `${otp} is your verification code`,
-          //   react: OTPVerificationEmail({
-          //     otpCode: otp,
-          //     expiryMinutes: "10",
-          //     userEmail: email,
-          //   }),
-          // });
+          await resend.emails.send({
+            from: "BetterAuth <onboarding@resend.dev>",
+            to: email,
+            subject: `${otp} is your verification code`,
+            react: OTPVerificationEmail({
+              otpCode: otp,
+              expiryMinutes: "10",
+              userEmail: email,
+            }),
+          });
         } else {
           // Send the OTP for password reset
           console.log("Sending OTP for password reset", email, otp);
@@ -103,9 +131,6 @@ export const auth = betterAuth({
           });
         }
       },
-    }),
-    haveIBeenPwned({
-      customPasswordCompromisedMessage: "Please choose a more secure password",
     }),
     polar({
       client: polarClient,

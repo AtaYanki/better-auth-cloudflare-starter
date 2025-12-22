@@ -2,7 +2,6 @@ import { authClient } from "@/lib/auth-client";
 import { ThemeProvider } from "./theme-provider";
 import { Link, useRouter } from "@tanstack/react-router";
 import { AuthUIProviderTanstack } from "@daveyplate/better-auth-ui/tanstack";
-// import { MetaTheme } from "./meta-theme"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const { navigate } = useRouter();

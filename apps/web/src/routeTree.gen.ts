@@ -10,25 +10,26 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuccessRouteImport } from './routes/success'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as _authenticatedRouteImport } from './routes/__authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthVerifyEmailRouteImport } from './routes/auth/verify-email'
 import { Route as AuthPathRouteImport } from './routes/auth/$path'
+import { Route as _authenticatedDashboardRouteImport } from './routes/__authenticated/dashboard'
+import { Route as _authenticatedAccountPathRouteImport } from './routes/__authenticated/account/$path'
 
 const SuccessRoute = SuccessRouteImport.update({
   id: '/success',
   path: '/success',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const _authenticatedRoute = _authenticatedRouteImport.update({
+  id: '/__authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -46,63 +47,82 @@ const AuthPathRoute = AuthPathRouteImport.update({
   path: '/auth/$path',
   getParentRoute: () => rootRouteImport,
 } as any)
+const _authenticatedDashboardRoute = _authenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => _authenticatedRoute,
+} as any)
+const _authenticatedAccountPathRoute =
+  _authenticatedAccountPathRouteImport.update({
+    id: '/account/$path',
+    path: '/account/$path',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
+  '/about': typeof AboutRoute
   '/success': typeof SuccessRoute
+  '/dashboard': typeof _authenticatedDashboardRoute
   '/auth/$path': typeof AuthPathRoute
   '/auth/verify-email': typeof AuthVerifyEmailRoute
+  '/account/$path': typeof _authenticatedAccountPathRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
+  '/about': typeof AboutRoute
   '/success': typeof SuccessRoute
+  '/dashboard': typeof _authenticatedDashboardRoute
   '/auth/$path': typeof AuthPathRoute
   '/auth/verify-email': typeof AuthVerifyEmailRoute
+  '/account/$path': typeof _authenticatedAccountPathRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
+  '/__authenticated': typeof _authenticatedRouteWithChildren
+  '/about': typeof AboutRoute
   '/success': typeof SuccessRoute
+  '/__authenticated/dashboard': typeof _authenticatedDashboardRoute
   '/auth/$path': typeof AuthPathRoute
   '/auth/verify-email': typeof AuthVerifyEmailRoute
+  '/__authenticated/account/$path': typeof _authenticatedAccountPathRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/dashboard'
-    | '/login'
+    | '/about'
     | '/success'
+    | '/dashboard'
     | '/auth/$path'
     | '/auth/verify-email'
+    | '/account/$path'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/dashboard'
-    | '/login'
+    | '/about'
     | '/success'
+    | '/dashboard'
     | '/auth/$path'
     | '/auth/verify-email'
+    | '/account/$path'
   id:
     | '__root__'
     | '/'
-    | '/dashboard'
-    | '/login'
+    | '/__authenticated'
+    | '/about'
     | '/success'
+    | '/__authenticated/dashboard'
     | '/auth/$path'
     | '/auth/verify-email'
+    | '/__authenticated/account/$path'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
-  LoginRoute: typeof LoginRoute
+  _authenticatedRoute: typeof _authenticatedRouteWithChildren
+  AboutRoute: typeof AboutRoute
   SuccessRoute: typeof SuccessRoute
   AuthPathRoute: typeof AuthPathRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
@@ -117,18 +137,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
+    '/__authenticated': {
+      id: '/__authenticated'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof _authenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -152,13 +172,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthPathRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/__authenticated/dashboard': {
+      id: '/__authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof _authenticatedDashboardRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
+    '/__authenticated/account/$path': {
+      id: '/__authenticated/account/$path'
+      path: '/account/$path'
+      fullPath: '/account/$path'
+      preLoaderRoute: typeof _authenticatedAccountPathRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
   }
 }
 
+interface _authenticatedRouteChildren {
+  _authenticatedDashboardRoute: typeof _authenticatedDashboardRoute
+  _authenticatedAccountPathRoute: typeof _authenticatedAccountPathRoute
+}
+
+const _authenticatedRouteChildren: _authenticatedRouteChildren = {
+  _authenticatedDashboardRoute: _authenticatedDashboardRoute,
+  _authenticatedAccountPathRoute: _authenticatedAccountPathRoute,
+}
+
+const _authenticatedRouteWithChildren = _authenticatedRoute._addFileChildren(
+  _authenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRoute,
-  LoginRoute: LoginRoute,
+  _authenticatedRoute: _authenticatedRouteWithChildren,
+  AboutRoute: AboutRoute,
   SuccessRoute: SuccessRoute,
   AuthPathRoute: AuthPathRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
