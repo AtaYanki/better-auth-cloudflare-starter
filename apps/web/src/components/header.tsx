@@ -19,18 +19,17 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import Logo from "@/components/logo";
-import { LineChart, LogOut, Settings, User } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
+import { LineChart, LogOut, Settings } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { UserButton } from "@daveyplate/better-auth-ui";
 
 const navigationLinks = [
   { href: "/", label: "Home", isExternal: false },
   { href: "/about", label: "About", isExternal: false },
-  { href: "https://glix.shop", label: "Fashion", isExternal: true },
+  { href: "https://github.com/atayanki/better-auth-cloudflare-starter", label: "GitHub", isExternal: true },
 ];
 
 export default function Header() {

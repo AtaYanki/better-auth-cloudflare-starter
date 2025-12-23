@@ -30,7 +30,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "My App",
+        title: "Better Auth Cloudflare Starter",
       },
     ],
     links: [
@@ -38,6 +38,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         rel: "stylesheet",
         href: appCss,
       },
+      {
+        rel: "icon",
+        href: "/favicon.png",
+        type: "image/png",
+      }
     ],
   }),
 

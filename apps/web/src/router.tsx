@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import type { AppRouter } from "@better-auth-cloudflare-starter/api/routers/index";
 import { TRPCProvider } from "./utils/trpc";
 
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
@@ -30,7 +32,7 @@ export const queryClient = new QueryClient({
 const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
-      url: `${import.meta.env.VITE_SERVER_URL}/trpc`,
+      url: `${SERVER_URL}/trpc`,
       fetch(url, options) {
         return fetch(url, {
           ...options,

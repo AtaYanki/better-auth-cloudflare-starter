@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "better-auth-cloudflare-starter-web",
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "routes": [
+    {
+      "pattern": "your-frontend-domain.com",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "NODE_ENV": "development",
+    "VITE_SERVER_URL": "http://localhost:3000"
+  },
+  "env": {
+    "production": {
+      "vars": {
+        "NODE_ENV": "production",
+        "VITE_SERVER_URL": "https://your-api-domain.com"
+      }
+    },
+    "development": {
+      "vars": {
+        "NODE_ENV": "development",
+        "VITE_SERVER_URL": "http://localhost:3000"
+      }
+    }
+  }
+}

@@ -27,6 +27,7 @@
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",
+    "deploy": "turbo deploy",
     "db:push": "turbo -F @better-auth-cloudflare-starter/db db:push",
     "db:studio": "turbo -F @better-auth-cloudflare-starter/db db:studio",
     "db:generate": "turbo -F @better-auth-cloudflare-starter/db db:generate",

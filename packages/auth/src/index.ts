@@ -13,7 +13,7 @@ import { admin, emailOTP, haveIBeenPwned } from "better-auth/plugins";
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import * as schema from "@better-auth-cloudflare-starter/db/schema/auth";
 
-const resend = new Resend(env.RESEND_API_KEY);
+const resend = new Resend(env.RESEND_API_KEY || "re_placeholder");
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -64,6 +64,7 @@ export const auth = betterAuth({
       sameSite: "none",
       secure: true,
       httpOnly: true,
+      partitioned: true,
     },
     // uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain
     // https://developers.cloudflare.com/workers/wrangler/configuration/#workersdev
