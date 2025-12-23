@@ -19,7 +19,7 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import Logo from "@/components/logo";
-import { LineChart, LogOut, User } from "lucide-react";
+import { LineChart, LogOut, Settings, User } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -127,13 +127,78 @@ export default function Header() {
         <div className="flex items-center gap-2">
           <ModeToggle />
           {session ? (
-            <UserButton
-              size="icon"
-              align="end"
-              additionalLinks={[
-                { icon: <LineChart />, href: "/dashboard", label: "Dashboard" },
-              ]}
-            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground w-8 h-8"
+                >
+                  <Avatar className="rounded-sm">
+                    <AvatarImage src={session.user.image ?? undefined} />
+                    <AvatarFallback>
+                      {session.user.name?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-md"
+                side="bottom"
+                align="end"
+                sideOffset={4}
+              >
+                <DropdownMenuLabel className="p-0 font-normal">
+                  <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                    <Avatar>
+                      <AvatarImage src={session.user.image ?? undefined} />
+                      <AvatarFallback>
+                        {session.user.name?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold text-foreground">
+                        {session.user.name}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {session.user.email}
+                      </span>
+                    </div>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <Link to="/dashboard">
+                    <DropdownMenuItem>
+                      <LineChart />
+                      Dashboard
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link to="/account/$path" params={{ path: "settings" }}>
+                    <DropdownMenuItem>
+                      <Settings />
+                      Settings
+                    </DropdownMenuItem>
+                  </Link>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() =>
+                    authClient.signOut({
+                      fetchOptions: {
+                        onSuccess: () => {
+                          navigate({
+                            to: "/",
+                          });
+                        },
+                      },
+                    })
+                  }
+                >
+                  <LogOut />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Button asChild>
               <Link to="/auth/$path" params={{ path: "sign-in" }}>

@@ -1,10 +1,10 @@
 import { getUserList } from "@/functions/get-user-list";
-// import {
-//   banUser,
-//   unbanUser,
-//   deleteUser,
-//   changeUserRole
-// } from "@/functions/user-actions";
+import {
+  banUser,
+  unbanUser,
+  deleteUser,
+  changeUserRole,
+} from "@/functions/user-actions";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import {
   useReactTable,
@@ -132,21 +132,27 @@ function RouteComponent() {
   });
 
   const handleBanUser = (userId: string) => {
-    (banMutation as any).mutate({ userId, banReason: "Banned by admin" });
+    banMutation.mutate({ data: { userId, banReason: "Banned by admin" } });
   };
 
   const handleUnbanUser = (userId: string) => {
-    (unbanMutation as any).mutate({ userId });
+    unbanMutation.mutate({ data: { userId } });
   };
 
   const handleDeleteUser = (userId: string) => {
-    if (confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
-      (deleteMutation as any).mutate({ userId });
+    if (
+      confirm(
+        "Are you sure you want to delete this user? This action cannot be undone."
+      )
+    ) {
+      deleteMutation.mutate({ data: { userId } });
     }
   };
 
   const handleChangeRole = (userId: string, role: string) => {
-    (changeRoleMutation as any).mutate({ userId, role: role as "user" | "admin" });
+    changeRoleMutation.mutate({
+      data: { userId, role: role as "user" | "admin" },
+    });
   };
 
   const columns: ColumnDef<User>[] = [
@@ -206,7 +212,8 @@ function RouteComponent() {
           user: { variant: "outline" as const, icon: UserCheck },
         };
 
-        const config = roleConfig[role as keyof typeof roleConfig] || roleConfig.user;
+        const config =
+          roleConfig[role as keyof typeof roleConfig] || roleConfig.user;
         const Icon = config.icon;
 
         return (
@@ -299,8 +306,12 @@ function RouteComponent() {
                 onValueChange={(value) => handleChangeRole(user.id, value)}
               >
                 <DropdownMenuRadioItem value="user">User</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="moderator">Moderator</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="moderator">
+                  Moderator
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="admin">
+                  Admin
+                </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
 
               <DropdownMenuSeparator />

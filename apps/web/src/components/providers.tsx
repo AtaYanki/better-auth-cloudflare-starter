@@ -14,9 +14,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
     >
       <AuthUIProviderTanstack
+        avatar={{
+          upload: async (file) => {
+            const formData = new FormData()
+            formData.append("avatar", file)
+            const res = await fetch("/api/uploadAvatar", { method: "POST", body: formData })
+            const { data } = await res.json()
+            return data.url
+          },
+          delete: async (url) => {
+            await fetch("/api/deleteAvatar", { method: "POST", body: JSON.stringify({ url }) })
+          },
+          extension: "png",
+          size: 128,
+        }}
         emailOTP={true}
         authClient={authClient}
-        emailVerification={true}
+        emailVerification={{ otp: true }}
         social={{
           providers: ["google"],
         }}
