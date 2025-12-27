@@ -25,21 +25,32 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { LineChart, LogOut, Settings } from "lucide-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { OrganizationSwitcher } from "@daveyplate/better-auth-ui";
+import { useScrollPosition } from "@/hooks/use-scroll-position";
+import { cn } from "@/lib/utils";
 
-const navigationLinks = [
-  { href: "/", label: "Home", isExternal: false },
-  { href: "/about", label: "About", isExternal: false },
-  { href: "https://github.com/atayanki/better-auth-cloudflare-starter", label: "GitHub", isExternal: true },
-];
+const navigationLinks: { href: string; label: string; isExternal: boolean }[] =
+  [
+    // { href: "/", label: "Home", isExternal: false },
+    // { href: "/about", label: "About", isExternal: false }
+  ];
 
 export default function Header() {
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
   const location = useLocation();
+  const { isScrolled } = useScrollPosition();
 
   return (
-    <header className="flex justify-center border-b w-full px-4 md:px-6">
-      <div className="flex h-16 items-center justify-between gap-4 container">
+    <header
+      className={cn(
+        "sticky top-0 z-50 flex w-full justify-center transition-all duration-300",
+        isScrolled
+          ? "bg-background/95 backdrop-blur-md border-b border-border/50"
+          : "bg-background/50 backdrop-blur-sm border-b border-border/20"
+      )}
+    >
+      <div className="flex h-16 w-full items-center justify-between gap-4 container px-4 md:px-6">
         {/* Left side */}
         <div className="flex items-center gap-2">
           {/* Mobile menu trigger */}
@@ -77,14 +88,17 @@ export default function Header() {
                 </svg>
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-36 p-1 md:hidden">
+            <PopoverContent
+              align="start"
+              className="w-36 p-1 md:hidden bg-background/95 backdrop-blur-md border-border/50"
+            >
               <NavigationMenu className="max-w-none *:w-full">
                 <NavigationMenuList className="flex-col items-start gap-0 md:gap-2">
                   {navigationLinks.map((link, index) => (
                     <NavigationMenuItem key={index} className="w-full">
                       <NavigationMenuLink
                         href={link.href}
-                        className="py-1.5"
+                        className="py-1.5 text-muted-foreground hover:text-foreground transition-colors"
                         active={location.pathname === link.href}
                         target={link.isExternal ? "_blank" : undefined}
                         rel={
@@ -102,6 +116,17 @@ export default function Header() {
           {/* Main nav */}
           <div className="flex items-center gap-6">
             <Logo />
+            {session && (
+              <OrganizationSwitcher
+                size="sm"
+                className={cn(
+                  "transition-colors",
+                  isScrolled
+                    ? "bg-background/80 text-foreground hover:bg-background/90"
+                    : "bg-background/30 text-foreground hover:bg-background/50"
+                )}
+              />
+            )}
             {/* Navigation menu */}
             <NavigationMenu className="max-md:hidden">
               <NavigationMenuList className="gap-2">
@@ -112,7 +137,7 @@ export default function Header() {
                       href={link.href}
                       target={link.isExternal ? "_blank" : undefined}
                       rel={link.isExternal ? "noopener noreferrer" : undefined}
-                      className="text-muted-foreground hover:text-primary py-1.5 font-medium"
+                      className="text-muted-foreground hover:text-foreground py-1.5 font-medium transition-colors"
                     >
                       {link.label}
                     </NavigationMenuLink>
@@ -141,7 +166,7 @@ export default function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-md"
+                className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-md bg-background/95 backdrop-blur-md border-border/50"
                 side="bottom"
                 align="end"
                 sideOffset={4}
@@ -166,12 +191,14 @@ export default function Header() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <Link to="/dashboard">
-                    <DropdownMenuItem>
-                      <LineChart />
-                      Dashboard
-                    </DropdownMenuItem>
-                  </Link>
+                  {session.user.role === "admin" && (
+                    <Link to="/dashboard">
+                      <DropdownMenuItem>
+                        <LineChart />
+                        Dashboard
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
                   <Link to="/account/$path" params={{ path: "settings" }}>
                     <DropdownMenuItem>
                       <Settings />
@@ -199,7 +226,15 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button asChild>
+            <Button
+              asChild
+              variant={isScrolled ? "default" : "outline"}
+              className={cn(
+                isScrolled
+                  ? ""
+                  : "border-border/50 bg-background/50 backdrop-blur-sm hover:bg-background/80"
+              )}
+            >
               <Link to="/auth/$path" params={{ path: "sign-in" }}>
                 Sign In
               </Link>

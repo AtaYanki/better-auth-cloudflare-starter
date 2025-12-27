@@ -12,7 +12,7 @@
   "dependencies": {
     "@better-auth-cloudflare-starter/api": "workspace:*",
     "@better-auth-cloudflare-starter/auth": "workspace:*",
-    "@daveyplate/better-auth-ui": "^3.3.8",
+    "@daveyplate/better-auth-ui": "^3.3.10",
     "@polar-sh/better-auth": "catalog:",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-navigation-menu": "^1.2.14",
@@ -35,7 +35,8 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dotenv": "catalog:",
-    "lucide-react": "^0.525.0",
+    "lucide-react": "^0.562.0",
+    "motion": "^12.23.26",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.4.2",
     "react": "19.2.3",

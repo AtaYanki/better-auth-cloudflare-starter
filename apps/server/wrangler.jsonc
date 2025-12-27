@@ -15,6 +15,13 @@
     "BETTER_AUTH_URL": "https://your-api-domain.com",
     "POLAR_SUCCESS_URL": "https://your-frontend-domain.com/success"
   },
+  "r2_buckets": [
+    {
+      "binding": "PUBLIC_BUCKET",
+      "bucket_name": "public-bucket-dev",
+      "remote": true
+    }
+  ],
   "env": {
     "production": {
       "vars": {
@@ -22,7 +29,14 @@
         "CORS_ORIGIN": "https://your-frontend-domain.com",
         "BETTER_AUTH_URL": "https://your-api-domain.com",
         "POLAR_SUCCESS_URL": "https://your-frontend-domain.com/success"
-      }
+      },
+      "r2_buckets": [
+        {
+          "binding": "PUBLIC_BUCKET",
+          "bucket_name": "public-bucket",
+          "remote": true
+        }
+      ]
     },
     "development": {
       "vars": {
@@ -30,7 +44,14 @@
         "CORS_ORIGIN": "http://localhost:3001",
         "BETTER_AUTH_URL": "http://localhost:3000",
         "POLAR_SUCCESS_URL": "http://localhost:3001/success"
-      }
+      },
+      "r2_buckets": [
+        {
+          "binding": "PUBLIC_BUCKET",
+          "bucket_name": "public-bucket-dev",
+          "remote": true
+        }
+      ]
     }
   }
 }

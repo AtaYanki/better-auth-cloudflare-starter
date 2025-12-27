@@ -10,12 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuccessRouteImport } from './routes/success'
-import { Route as AboutRouteImport } from './routes/about'
+import { Route as AcceptInvitationRouteImport } from './routes/accept-invitation'
 import { Route as _authenticatedRouteImport } from './routes/__authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthVerifyEmailRouteImport } from './routes/auth/verify-email'
 import { Route as AuthPathRouteImport } from './routes/auth/$path'
 import { Route as _authenticatedDashboardRouteImport } from './routes/__authenticated/dashboard'
+import { Route as _authenticatedOrganizationPathRouteImport } from './routes/__authenticated/organization/$path'
 import { Route as _authenticatedAccountPathRouteImport } from './routes/__authenticated/account/$path'
 
 const SuccessRoute = SuccessRouteImport.update({
@@ -23,9 +24,9 @@ const SuccessRoute = SuccessRouteImport.update({
   path: '/success',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const AcceptInvitationRoute = AcceptInvitationRouteImport.update({
+  id: '/accept-invitation',
+  path: '/accept-invitation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const _authenticatedRoute = _authenticatedRouteImport.update({
@@ -52,6 +53,12 @@ const _authenticatedDashboardRoute = _authenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => _authenticatedRoute,
 } as any)
+const _authenticatedOrganizationPathRoute =
+  _authenticatedOrganizationPathRouteImport.update({
+    id: '/organization/$path',
+    path: '/organization/$path',
+    getParentRoute: () => _authenticatedRoute,
+  } as any)
 const _authenticatedAccountPathRoute =
   _authenticatedAccountPathRouteImport.update({
     id: '/account/$path',
@@ -61,68 +68,74 @@ const _authenticatedAccountPathRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/accept-invitation': typeof AcceptInvitationRoute
   '/success': typeof SuccessRoute
   '/dashboard': typeof _authenticatedDashboardRoute
   '/auth/$path': typeof AuthPathRoute
   '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/account/$path': typeof _authenticatedAccountPathRoute
+  '/organization/$path': typeof _authenticatedOrganizationPathRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/accept-invitation': typeof AcceptInvitationRoute
   '/success': typeof SuccessRoute
   '/dashboard': typeof _authenticatedDashboardRoute
   '/auth/$path': typeof AuthPathRoute
   '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/account/$path': typeof _authenticatedAccountPathRoute
+  '/organization/$path': typeof _authenticatedOrganizationPathRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/__authenticated': typeof _authenticatedRouteWithChildren
-  '/about': typeof AboutRoute
+  '/accept-invitation': typeof AcceptInvitationRoute
   '/success': typeof SuccessRoute
   '/__authenticated/dashboard': typeof _authenticatedDashboardRoute
   '/auth/$path': typeof AuthPathRoute
   '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/__authenticated/account/$path': typeof _authenticatedAccountPathRoute
+  '/__authenticated/organization/$path': typeof _authenticatedOrganizationPathRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/about'
+    | '/accept-invitation'
     | '/success'
     | '/dashboard'
     | '/auth/$path'
     | '/auth/verify-email'
     | '/account/$path'
+    | '/organization/$path'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/about'
+    | '/accept-invitation'
     | '/success'
     | '/dashboard'
     | '/auth/$path'
     | '/auth/verify-email'
     | '/account/$path'
+    | '/organization/$path'
   id:
     | '__root__'
     | '/'
     | '/__authenticated'
-    | '/about'
+    | '/accept-invitation'
     | '/success'
     | '/__authenticated/dashboard'
     | '/auth/$path'
     | '/auth/verify-email'
     | '/__authenticated/account/$path'
+    | '/__authenticated/organization/$path'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   _authenticatedRoute: typeof _authenticatedRouteWithChildren
-  AboutRoute: typeof AboutRoute
+  AcceptInvitationRoute: typeof AcceptInvitationRoute
   SuccessRoute: typeof SuccessRoute
   AuthPathRoute: typeof AuthPathRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
@@ -137,11 +150,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/accept-invitation': {
+      id: '/accept-invitation'
+      path: '/accept-invitation'
+      fullPath: '/accept-invitation'
+      preLoaderRoute: typeof AcceptInvitationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/__authenticated': {
@@ -179,6 +192,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof _authenticatedDashboardRouteImport
       parentRoute: typeof _authenticatedRoute
     }
+    '/__authenticated/organization/$path': {
+      id: '/__authenticated/organization/$path'
+      path: '/organization/$path'
+      fullPath: '/organization/$path'
+      preLoaderRoute: typeof _authenticatedOrganizationPathRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
     '/__authenticated/account/$path': {
       id: '/__authenticated/account/$path'
       path: '/account/$path'
@@ -192,11 +212,13 @@ declare module '@tanstack/react-router' {
 interface _authenticatedRouteChildren {
   _authenticatedDashboardRoute: typeof _authenticatedDashboardRoute
   _authenticatedAccountPathRoute: typeof _authenticatedAccountPathRoute
+  _authenticatedOrganizationPathRoute: typeof _authenticatedOrganizationPathRoute
 }
 
 const _authenticatedRouteChildren: _authenticatedRouteChildren = {
   _authenticatedDashboardRoute: _authenticatedDashboardRoute,
   _authenticatedAccountPathRoute: _authenticatedAccountPathRoute,
+  _authenticatedOrganizationPathRoute: _authenticatedOrganizationPathRoute,
 }
 
 const _authenticatedRouteWithChildren = _authenticatedRoute._addFileChildren(
@@ -206,7 +228,7 @@ const _authenticatedRouteWithChildren = _authenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   _authenticatedRoute: _authenticatedRouteWithChildren,
-  AboutRoute: AboutRoute,
+  AcceptInvitationRoute: AcceptInvitationRoute,
   SuccessRoute: SuccessRoute,
   AuthPathRoute: AuthPathRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,

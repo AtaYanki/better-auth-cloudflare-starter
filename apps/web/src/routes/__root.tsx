@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import appCss from "../index.css?url";
 import Header from "../components/header";
+import { Footer } from "../components/landing";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
 import type { QueryClient } from "@tanstack/react-query";
@@ -57,9 +58,12 @@ function RootDocument() {
       </head>
       <body>
         <Providers>
-          <div className="grid h-svh grid-rows-[auto_1fr]">
+          <div className="flex min-h-svh flex-col">
             <Header />
-            <Outlet />
+            <main className="flex-1">
+              <Outlet />
+            </main>
+            <Footer />
           </div>
         </Providers>
         <Toaster richColors />

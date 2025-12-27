@@ -7,7 +7,7 @@ import { auth } from "@better-auth-cloudflare-starter/auth";
 import { createContext } from "@better-auth-cloudflare-starter/api/context";
 import { appRouter } from "@better-auth-cloudflare-starter/api/routers/index";
 
-const app = new Hono();
+const app = new Hono<{ Bindings: CloudflareBindings }>();
 
 app.use(logger());
 app.use(

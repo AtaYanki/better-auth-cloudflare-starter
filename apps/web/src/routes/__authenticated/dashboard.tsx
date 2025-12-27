@@ -17,6 +17,7 @@ import {
   ColumnFiltersState,
 } from "@tanstack/react-table";
 import { useState } from "react";
+import * as React from "react";
 import { format } from "date-fns";
 import {
   MoreHorizontal,
@@ -27,6 +28,8 @@ import {
   UserCheck,
   UserX,
   Crown,
+  Users,
+  UserPlus,
 } from "lucide-react";
 
 import {
@@ -50,6 +53,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -80,12 +84,42 @@ export const Route = createFileRoute("/__authenticated/dashboard")({
         params: { path: "sign-in" },
       });
     }
+
+    if (context.session.data?.user?.role !== "admin") {
+      throw redirect({
+        to: "/",
+      });
+    }
   },
 });
 
 function RouteComponent() {
   const { users } = Route.useRouteContext();
   const queryClient = useQueryClient();
+
+  // Calculate user statistics
+  const userStats = React.useMemo(() => {
+    const userList = (users || []) as User[];
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    return {
+      total: userList.length,
+      active: userList.filter((u) => !u.banned).length,
+      banned: userList.filter((u) => u.banned).length,
+      verified: userList.filter((u) => u.emailVerified).length,
+      unverified: userList.filter((u) => !u.emailVerified).length,
+      admins: userList.filter((u) => u.role === "admin").length,
+      moderators: userList.filter((u) => u.role === "moderator").length,
+      regularUsers: userList.filter((u) => !u.role || u.role === "user").length,
+      recent7Days: userList.filter((u) => new Date(u.createdAt) >= sevenDaysAgo)
+        .length,
+      recent30Days: userList.filter(
+        (u) => new Date(u.createdAt) >= thirtyDaysAgo
+      ).length,
+    };
+  }, [users]);
 
   const banMutation = useMutation({
     mutationFn: banUser,
@@ -379,6 +413,123 @@ function RouteComponent() {
         <div className="text-sm text-muted-foreground">
           {users?.length || 0} users total
         </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userStats.total}</div>
+            <p className="text-xs text-muted-foreground">
+              All registered users
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+            <Shield className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userStats.active}</div>
+            <p className="text-xs text-muted-foreground">
+              {userStats.banned > 0
+                ? `${userStats.banned} banned`
+                : "All users active"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Verified Users
+            </CardTitle>
+            <UserCheck className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userStats.verified}</div>
+            <p className="text-xs text-muted-foreground">
+              {userStats.unverified > 0
+                ? `${userStats.unverified} unverified`
+                : "All users verified"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Recent Signups
+            </CardTitle>
+            <UserPlus className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userStats.recent7Days}</div>
+            <p className="text-xs text-muted-foreground">
+              {userStats.recent30Days} in last 30 days
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Role Distribution */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Admins</CardTitle>
+            <Crown className="h-4 w-4 text-yellow-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userStats.admins}</div>
+            <p className="text-xs text-muted-foreground">
+              {userStats.total > 0
+                ? `${Math.round(
+                    (userStats.admins / userStats.total) * 100
+                  )}% of total`
+                : "0% of total"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Moderators</CardTitle>
+            <Shield className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userStats.moderators}</div>
+            <p className="text-xs text-muted-foreground">
+              {userStats.total > 0
+                ? `${Math.round(
+                    (userStats.moderators / userStats.total) * 100
+                  )}% of total`
+                : "0% of total"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Regular Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userStats.regularUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              {userStats.total > 0
+                ? `${Math.round(
+                    (userStats.regularUsers / userStats.total) * 100
+                  )}% of total`
+                : "0% of total"}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="rounded-md border">

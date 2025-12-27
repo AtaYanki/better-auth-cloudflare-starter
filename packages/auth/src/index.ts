@@ -2,6 +2,7 @@ import {
   SignInOTPEmail,
   OTPVerificationEmail,
   PasswordResetOTPEmail,
+  OrganizationInviteEmail,
 } from "@better-auth-cloudflare-starter/transactional/emails";
 import { Resend } from "resend";
 import { env } from "cloudflare:workers";
@@ -9,11 +10,22 @@ import { betterAuth } from "better-auth";
 import { polarClient } from "./lib/payments";
 import { db } from "@better-auth-cloudflare-starter/db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { admin, emailOTP, haveIBeenPwned } from "better-auth/plugins";
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+import {
+  admin,
+  emailOTP,
+  haveIBeenPwned,
+  organization,
+} from "better-auth/plugins";
 import * as schema from "@better-auth-cloudflare-starter/db/schema/auth";
+import dotenv from "dotenv";
+dotenv.config({
+  path: "../../apps/server/.env",
+});
 
-const resend = new Resend(env.RESEND_API_KEY || "re_placeholder");
+const resend = new Resend(
+  process.env.RESEND_API_KEY || env.RESEND_API_KEY || "re_placeholder"
+);
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -57,8 +69,8 @@ export const auth = betterAuth({
   //     maxAge: 60,
   //   },
   // },
-  secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.BETTER_AUTH_URL,
+  secret: process.env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET,
+  baseURL: process.env.BETTER_AUTH_URL || env.BETTER_AUTH_URL,
   advanced: {
     defaultCookieAttributes: {
       sameSite: "none",
@@ -82,9 +94,6 @@ export const auth = betterAuth({
       sendVerificationOnSignUp: true,
       async sendVerificationOTP({ email, otp, type }, ctx) {
         if (type === "sign-in") {
-          // Send the OTP for sign in
-          console.log("Sending OTP for sign in", email, otp);
-
           await resend.emails.send({
             from: "BetterAuth <onboarding@resend.dev>",
             to: email,
@@ -101,9 +110,6 @@ export const auth = betterAuth({
             }),
           });
         } else if (type === "email-verification") {
-          // Send the OTP for email verification
-          console.log("Sending OTP for email verification", email, otp);
-
           await resend.emails.send({
             from: "BetterAuth <onboarding@resend.dev>",
             to: email,
@@ -115,9 +121,6 @@ export const auth = betterAuth({
             }),
           });
         } else {
-          // Send the OTP for password reset
-          console.log("Sending OTP for password reset", email, otp);
-
           await resend.emails.send({
             from: "BetterAuth <onboarding@resend.dev>",
             to: email,
@@ -150,6 +153,26 @@ export const auth = betterAuth({
         }),
         portal(),
       ],
+    }),
+    organization({
+      teams: {
+        enabled: true,
+      },
+      requireEmailVerificationOnInvitation: true,
+      sendInvitationEmail: async (data) => {
+        const invitationUrl = `${env.CORS_ORIGIN}/accept-invitation?invitationId=${data.id}`;
+        await resend.emails.send({
+          from: "BetterAuth <onboarding@resend.dev>",
+          to: data.email,
+          subject: `${data.inviter.user.name} has invited you to join ${data.organization.name}`,
+          react: OrganizationInviteEmail({
+            inviterName: data.inviter.user.name,
+            organizationName: data.organization.name,
+            inviteLink: invitationUrl,
+            expiresIn: 7,
+          }),
+        });
+      },
     }),
   ],
 });
