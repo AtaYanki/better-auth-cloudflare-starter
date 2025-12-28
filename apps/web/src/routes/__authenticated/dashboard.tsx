@@ -110,9 +110,6 @@ function RouteComponent() {
       banned: userList.filter((u) => u.banned).length,
       verified: userList.filter((u) => u.emailVerified).length,
       unverified: userList.filter((u) => !u.emailVerified).length,
-      admins: userList.filter((u) => u.role === "admin").length,
-      moderators: userList.filter((u) => u.role === "moderator").length,
-      regularUsers: userList.filter((u) => !u.role || u.role === "user").length,
       recent7Days: userList.filter((u) => new Date(u.createdAt) >= sevenDaysAgo)
         .length,
       recent30Days: userList.filter(
@@ -410,9 +407,6 @@ function RouteComponent() {
             Manage users, roles, and permissions
           </p>
         </div>
-        <div className="text-sm text-muted-foreground">
-          {users?.length || 0} users total
-        </div>
       </div>
 
       {/* Stats Grid */}
@@ -478,59 +472,6 @@ function RouteComponent() {
         </Card>
       </div>
 
-      {/* Role Distribution */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Admins</CardTitle>
-            <Crown className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{userStats.admins}</div>
-            <p className="text-xs text-muted-foreground">
-              {userStats.total > 0
-                ? `${Math.round(
-                    (userStats.admins / userStats.total) * 100
-                  )}% of total`
-                : "0% of total"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Moderators</CardTitle>
-            <Shield className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{userStats.moderators}</div>
-            <p className="text-xs text-muted-foreground">
-              {userStats.total > 0
-                ? `${Math.round(
-                    (userStats.moderators / userStats.total) * 100
-                  )}% of total`
-                : "0% of total"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Regular Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{userStats.regularUsers}</div>
-            <p className="text-xs text-muted-foreground">
-              {userStats.total > 0
-                ? `${Math.round(
-                    (userStats.regularUsers / userStats.total) * 100
-                  )}% of total`
-                : "0% of total"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
 
       <div className="rounded-md border">
         <Table>
