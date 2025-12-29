@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-router";
 import appCss from "../index.css?url";
 import Header from "../components/header";
-import { Footer } from "../components/landing";
+import Footer from "../components/footer";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
 import type { QueryClient } from "@tanstack/react-query";
@@ -43,7 +43,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         rel: "icon",
         href: "/favicon.png",
         type: "image/png",
-      }
+      },
     ],
   }),
 
@@ -67,8 +67,8 @@ function RootDocument() {
           </div>
         </Providers>
         <Toaster richColors />
-        {/* <TanStackRouterDevtools position="bottom-left" />
-        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" /> */}
+        <TanStackRouterDevtools position="bottom-left" />
+        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
         <Scripts />
       </body>
     </html>

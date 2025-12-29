@@ -57,6 +57,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           extension: "png",
           size: 128,
         }}
+        deleteUser={true}
         organization={true}
         teams={true}
         emailOTP={true}

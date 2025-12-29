@@ -18,10 +18,6 @@ import {
   organization,
 } from "better-auth/plugins";
 import * as schema from "@better-auth-cloudflare-starter/db/schema/auth";
-import dotenv from "dotenv";
-dotenv.config({
-  path: "../../apps/server/.env",
-});
 
 const resend = new Resend(
   process.env.RESEND_API_KEY || env.RESEND_API_KEY || "re_placeholder"
@@ -53,6 +49,14 @@ export const auth = betterAuth({
             expiryMinutes: "10",
             userEmail: user.email,
           }),
+        });
+      },
+    },
+    deleteUser: {
+      enabled: true,
+      afterDelete: async (user) => {
+        await polarClient.customers.deleteExternal({
+          externalId: user.id,
         });
       },
     },
@@ -138,17 +142,17 @@ export const auth = betterAuth({
     }),
     polar({
       client: polarClient,
-      createCustomerOnSignUp: false,
+      createCustomerOnSignUp: true,
       enableCustomerPortal: true,
       use: [
         checkout({
           products: [
             {
-              productId: "your-product-id",
+              productId: "808493dd-7db3-41b4-ba29-c62baa9dda3b",
               slug: "pro",
             },
           ],
-          successUrl: env.POLAR_SUCCESS_URL,
+          successUrl: env.POLAR_SUCCESS_URL + "?checkout_id=${CHECKOUT_ID}",
           authenticatedUsersOnly: true,
         }),
         portal(),

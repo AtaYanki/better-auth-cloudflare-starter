@@ -17,7 +17,20 @@ export const appRouter = router({
           message: "File is required",
         });
       }
-      const data = await ctx.context.env.PUBLIC_BUCKET.put(file.name, file.stream());
+
+      if (file.size > 1024 * 1024 * 5) {
+        // 5MB
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "File size is too large",
+          cause: `File size is ${file.size} bytes, max size is 5MB`,
+        });
+      }
+      
+      const data = await ctx.context.env.PUBLIC_BUCKET.put(
+        file.name,
+        file.stream()
+      );
       if (!data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

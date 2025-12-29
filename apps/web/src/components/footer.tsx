@@ -2,7 +2,7 @@ import Logo from "@/components/logo";
 import SimpleIcon from "@/components/simple-icon";
 import { siGithub, siX } from "simple-icons";
 
-export function Footer() {
+export default function Footer() {
   return (
     <footer className="border-t bg-background py-8">
       <div className="container mx-auto px-4">

@@ -1,9 +1,6 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
-import SimpleIcon from "@/components/simple-icon";
-import { siGithub } from "simple-icons";
+import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 
 export function Hero() {
   return (
@@ -17,7 +14,6 @@ export function Hero() {
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 py-16 md:py-24">
         <div className="mx-auto max-w-5xl text-center">
-
           {/* Main Title */}
           <h1 className="mb-6 text-6xl font-bold tracking-tight md:text-8xl lg:text-9xl">
             <span className="text-foreground">Better Auth</span>
@@ -40,31 +36,7 @@ export function Hero() {
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 py-6 border-border/50 bg-background/50 backdrop-blur-sm hover:bg-background/80"
-              asChild
-            >
-              <a
-                href="https://github.com/atayanki/better-auth-cloudflare-starter"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <SimpleIcon icon={siGithub} className="mr-2 h-5 w-5" />
-                GitHub
-              </a>
-            </Button>
           </div>
-
-          {/* Explore Features Link */}
-          <a
-            href="#features"
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Explore Features
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </a>
         </div>
       </div>
     </section>

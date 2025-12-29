@@ -18,16 +18,17 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
 import Logo from "@/components/logo";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { LineChart, LogOut, Settings } from "lucide-react";
+import { useScrollPosition } from "@/hooks/use-scroll-position";
+import { OrganizationSwitcher } from "@daveyplate/better-auth-ui";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { OrganizationSwitcher } from "@daveyplate/better-auth-ui";
-import { useScrollPosition } from "@/hooks/use-scroll-position";
-import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 
 const navigationLinks: { href: string; label: string; isExternal: boolean }[] =
   [
@@ -40,6 +41,14 @@ export default function Header() {
   const { data: session } = authClient.useSession();
   const location = useLocation();
   const { isScrolled } = useScrollPosition();
+
+  useEffect(() => {
+    const fetchCustomerState = async () => {
+      const customerState = await authClient.customer.state();
+      console.log(customerState);
+    };
+    fetchCustomerState();
+  }, []);
 
   return (
     <header
