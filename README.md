@@ -16,6 +16,8 @@ A production-ready full-stack starter template built on Cloudflare Workers, feat
 - **Have I Been Pwned** integration - Password breach detection
 - **Secure session management** - HTTP-only cookies with proper security headers
 - **Email OTP flows** - Sign-in, email verification, and password reset
+- **API Rate Limiting** - Tier-based rate limiting (authenticated/unauthenticated/paid users)
+- **Multi-tenant Support** - Full organization and team management with invitations
 
 ### 💳 Payments & Subscriptions
 - **Polar.sh** integration - Modern payment processing
@@ -31,7 +33,7 @@ A production-ready full-stack starter template built on Cloudflare Workers, feat
 ### 🗄️ Database & Storage
 - **Neon Database** - Serverless PostgreSQL with auto-scaling
 - **Drizzle ORM** - Type-safe database operations
-- **Cloudflare R2** - Global object storage for user uploads (planned)
+- **Cloudflare R2** - Type-safe bucket service with automatic type extraction
 
 ### 🏗️ Developer Experience
 - **Turborepo** - Optimized monorepo build system
@@ -115,6 +117,87 @@ Visit the web app and try:
 - **Sign in** with OTP codes
 - **Password reset** flow
 - **Profile management**
+
+## 🚀 Quick Start (Minimal Setup)
+
+If you want to get started quickly without setting up all external services, you can run with minimal configuration:
+
+### Minimal Prerequisites
+
+- **Node.js 18+** or **Bun**
+- **PostgreSQL database** (local or [Neon](https://neon.tech))
+- **Cloudflare account** (for deployment only)
+
+### Minimal Configuration
+
+1. **Clone and install:**
+   ```bash
+   git clone <your-repo-url>
+   cd better-auth-cloudflare-starter
+   bun install
+   ```
+
+2. **Set up minimal environment:**
+
+   ```bash
+   # apps/server/.env (minimal)
+   DATABASE_URL="postgresql://user:password@host/database"
+   BETTER_AUTH_SECRET="your-super-secret-key"  # Generate with: openssl rand -base64 32
+   BETTER_AUTH_URL="http://localhost:3000"
+   CORS_ORIGIN="http://localhost:3001"
+   
+   # Optional: Mock email (emails will be logged to console)
+   RESEND_API_KEY="re_placeholder"
+   
+   # Optional: Skip Polar setup (payment features will be disabled)
+   # POLAR_ACCESS_TOKEN=""
+   # POLAR_SUCCESS_URL=""
+
+   # apps/web/.env (minimal)
+   VITE_SERVER_URL="http://localhost:3000"
+   ```
+
+3. **Set up database:**
+   ```bash
+   bun run db:push
+   ```
+
+4. **Start development:**
+   ```bash
+   bun run dev
+   ```
+
+### What Works Without External Services
+
+✅ **Authentication** - Email/password and OTP flows work  
+✅ **Database** - All CRUD operations  
+✅ **API Routes** - tRPC endpoints function normally  
+✅ **UI Components** - All frontend features work  
+✅ **Rate Limiting** - Works with default limits (configured in `wrangler.jsonc`)  
+⚠️ **Email** - Emails logged to console (check server logs)  
+⚠️ **Payments** - Payment features disabled (tier checks will default to free)  
+
+### Enabling Features Later
+
+**To enable email sending:**
+1. Sign up for [Resend](https://resend.com)
+2. Add `RESEND_API_KEY` to `apps/server/.env`
+3. Restart the server
+
+**To enable payments:**
+1. Sign up for [Polar.sh](https://polar.sh)
+2. Create a product
+3. Add `POLAR_ACCESS_TOKEN` and `POLAR_PRO_PRODUCT_ID` to `apps/server/.env`
+4. Update `apps/web/.env` with `VITE_POLAR_PRO_PRODUCT_ID`
+5. Restart both servers
+
+### Mock Email Behavior
+
+When `RESEND_API_KEY` is not set or is a placeholder:
+- Email templates are rendered but not sent
+- Email content is logged to the server console
+- You can copy verification links from the logs
+- All auth flows work normally for testing
 
 
 
@@ -244,6 +327,21 @@ better-auth-cloudflare-starter/
 
 ## 🎨 Customization
 
+### Architecture Patterns
+
+This starter uses several architectural patterns for maintainability and scalability:
+
+- **Repository Pattern** - Data access abstraction
+- **Service Layer** - Business logic with tier-based limits
+- **Service Locator** - Centralized service management
+- **Type-Safe Bucket Service** - Cloudflare R2 integration
+
+📖 **See [PATTERNS.md](./PATTERNS.md) for detailed documentation** on:
+- How to create new repositories and services
+- Implementing tier-based feature limits
+- Using the bucket service for file storage
+- Complete examples and best practices
+
 ### Styling
 - **Theme**: Modify `apps/web/src/components/theme-provider.tsx`
 - **Colors**: Update Tailwind config in `apps/web/tailwind.config.ts`
@@ -261,12 +359,62 @@ better-auth-cloudflare-starter/
 - **Product ID**: Set via `POLAR_PRO_PRODUCT_ID` env var or update defaults in config files
 - **Pricing**: Modify checkout flows and success URLs in `packages/auth/src/index.ts`
 
+### Multi-tenant & Organizations
+- **Configuration**: Organization plugin is configured in `packages/auth/src/index.ts`
+- **Features**:
+  - ✅ Organization creation and management
+  - ✅ Team management within organizations
+  - ✅ Member roles (owner, admin, member)
+  - ✅ Email-based invitations with verification
+  - ✅ Organization switcher in header
+  - ✅ Active organization/team tracking in sessions
+- **UI Components**: 
+  - Organization routes: `apps/web/src/routes/__authenticated/organization/$path.tsx`
+  - Accept invitation: `apps/web/src/routes/accept-invitation.tsx`
+  - Organization switcher: Integrated in header component
+- **Customization**: 
+  - Modify organization settings in `packages/auth/src/index.ts`:
+    ```typescript
+    organization({
+      teams: { enabled: true },
+      requireEmailVerificationOnInvitation: true,
+      sendInvitationEmail: async (data) => { /* custom email */ }
+    })
+  ```
+  - Customize invitation email template: `packages/transactional/emails/organization-invite-email.tsx`
+
+### Rate Limiting
+- **Configuration**: Rate limiters are configured in `apps/server/wrangler.jsonc`
+- **Tiers**: 
+  - `UNAUTHENTICATED_RATE_LIMITER` - For unauthenticated users (default: 100 requests/60s)
+  - `AUTHENTICATED_RATE_LIMITER` - For authenticated users (default: 1000 requests/60s)
+- **Customization**: Update limits in `wrangler.jsonc`:
+  ```jsonc
+  "ratelimits": [
+    {
+      "name": "UNAUTHENTICATED_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 100, "period": 60 }  // 100 requests per 60 seconds
+    },
+    {
+      "name": "AUTHENTICATED_RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 1000, "period": 60 }  // 1000 requests per 60 seconds
+    }
+  ]
+  ```
+- **How it works**: 
+  - Rate limiting is applied automatically based on authentication status
+  - Authenticated users get higher limits
+  - Paid/Pro users can be given even higher limits (configure in rate limiter binding)
+  - Rate limit keys use user ID for authenticated users, IP address for unauthenticated
+
 ## 🗺️ Roadmap
 
 ### Planned Features
-- [ ] **Cloudflare R2 Integration** - User avatar uploads and file storage
-- [ ] **Multi-tenant Support** - Organization/account management (partially implemented)
-- [ ] **API Rate Limiting** - Request throttling and abuse prevention
+- [x] **Cloudflare R2 Integration** - Type-safe bucket service with automatic type extraction ✅
+- [x] **API Rate Limiting** - Request throttling and abuse prevention with tier-based limits ✅
+- [x] **Multi-tenant Support** - Full organization and team management with invitations ✅
 - [ ] **Audit Logs** - User activity tracking and compliance
 - [ ] **Admin Dashboard** - User management and analytics
 - [ ] **Webhook Support** - Integration with external services
