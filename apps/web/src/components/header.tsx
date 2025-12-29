@@ -23,12 +23,13 @@ import Logo from "@/components/logo";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
-import { LineChart, LogOut, Settings } from "lucide-react";
 import { useScrollPosition } from "@/hooks/use-scroll-position";
+import { POLAR_PRODUCTS, isProduct } from "@/lib/polar-products";
 import { OrganizationSwitcher } from "@daveyplate/better-auth-ui";
+import { LineChart, LogOut, Settings, Sparkles } from "lucide-react";
+import { useCustomerState, useCheckoutEmbed } from "@/hooks/use-polar";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useEffect } from "react";
 
 const navigationLinks: { href: string; label: string; isExternal: boolean }[] =
   [
@@ -38,17 +39,18 @@ const navigationLinks: { href: string; label: string; isExternal: boolean }[] =
 
 export default function Header() {
   const navigate = useNavigate();
-  const { data: session } = authClient.useSession();
   const location = useLocation();
+  const checkoutEmbed = useCheckoutEmbed();
   const { isScrolled } = useScrollPosition();
+  const { data: session } = authClient.useSession();
+  const { data: customerState } = useCustomerState();
 
-  useEffect(() => {
-    const fetchCustomerState = async () => {
-      const customerState = await authClient.customer.state();
-      console.log(customerState);
-    };
-    fetchCustomerState();
-  }, []);
+  // Check if user has active Pro subscription
+  const hasPro =
+    customerState &&
+    customerState.activeSubscriptions.some((sub) =>
+      isProduct(sub.productId, "pro")
+    );
 
   return (
     <header
@@ -207,6 +209,19 @@ export default function Header() {
                         Dashboard
                       </DropdownMenuItem>
                     </Link>
+                  )}
+                  {!hasPro && (
+                    <DropdownMenuItem
+                      onClick={() =>
+                        checkoutEmbed.mutate({
+                          productId: POLAR_PRODUCTS.pro.id,
+                          slug: POLAR_PRODUCTS.pro.slug,
+                        })
+                      }
+                    >
+                      <Sparkles />
+                      Upgrade to Pro
+                    </DropdownMenuItem>
                   )}
                   <Link to="/account/$path" params={{ path: "settings" }}>
                     <DropdownMenuItem>

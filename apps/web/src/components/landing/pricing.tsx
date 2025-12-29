@@ -6,12 +6,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@tanstack/react-router";
+import { useCheckoutEmbed } from "@/hooks/use-polar";
+import { POLAR_PRODUCTS } from "@/lib/polar-products";
 
 export function Pricing() {
   const router = useRouter();
+  const checkoutEmbed = useCheckoutEmbed();
 
   const plans = [
     {
@@ -37,9 +39,9 @@ export function Pricing() {
         "Everything you need to ship faster with advanced features. Cancel anytime.",
       cta: "Upgrade to Pro",
       ctaAction: () =>
-        authClient.checkoutEmbed({
-          productId: "808493dd-7db3-41b4-ba29-c62baa9dda3b",
-          slug: "pro",
+        checkoutEmbed.mutate({
+          productId: POLAR_PRODUCTS.pro.id,
+          slug: POLAR_PRODUCTS.pro.slug,
         }),
       highlight: true,
     },
