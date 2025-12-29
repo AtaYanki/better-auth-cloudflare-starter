@@ -5,13 +5,6 @@ import {
   OrganizationInviteEmail,
   PasswordResetEmail,
 } from "@better-auth-cloudflare-starter/transactional/emails";
-import { Resend } from "resend";
-import { env } from "cloudflare:workers";
-import { betterAuth } from "better-auth";
-import { polarClient } from "./lib/payments";
-import { db } from "@better-auth-cloudflare-starter/db";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { polar, checkout, portal } from "@polar-sh/better-auth";
 import {
   admin,
   emailOTP,
@@ -19,7 +12,14 @@ import {
   organization,
 } from "better-auth/plugins";
 import * as schema from "@better-auth-cloudflare-starter/db/schema/auth";
+import { Resend } from "resend";
+import { env } from "cloudflare:workers";
+import { betterAuth } from "better-auth";
+import { polarClient } from "./lib/payments";
+import { db } from "@better-auth-cloudflare-starter/db";
 import { getPolarProducts } from "./lib/polar-products";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { polar, checkout, portal } from "@polar-sh/better-auth";
 
 const resend = new Resend(
   process.env.RESEND_API_KEY || env.RESEND_API_KEY || "re_placeholder"
@@ -34,14 +34,7 @@ export const auth = betterAuth({
   user: {
     changeEmail: {
       enabled: true,
-      sendChangeEmailConfirmation: async ({ user, url, token }, request) => {
-        console.log(
-          "Sending change email confirmation",
-          user,
-          url,
-          token,
-          request
-        );
+      sendChangeEmailConfirmation: async ({ user, token }) => {
         await resend.emails.send({
           from: "BetterAuth <onboarding@resend.dev>",
           to: user.email,
@@ -68,29 +61,23 @@ export const auth = betterAuth({
     requireEmailVerification: true,
     autoSignInAfterVerification: true,
     sendResetPassword: async ({ user, url }) => {
-      // Parse the URL to update the callbackURL parameter
-      // The URL structure: http://api.example.com/api/auth/reset-password/TOKEN?callbackURL=/auth/reset-password
-      // We need to change callbackURL to point to the web app domain
       const webAppUrl = env.CORS_ORIGIN || process.env.CORS_ORIGIN || "";
-      
+
       let resetUrl = url;
       if (webAppUrl) {
         try {
           const urlObj = new URL(url);
           const callbackURL = urlObj.searchParams.get("callbackURL");
-          
+
           if (callbackURL) {
-            // If callbackURL is relative, make it absolute with web app domain
             const absoluteCallbackURL = callbackURL.startsWith("http")
               ? callbackURL
               : `${webAppUrl}${callbackURL}`;
-            
-            // Update the callbackURL parameter
+
             urlObj.searchParams.set("callbackURL", absoluteCallbackURL);
             resetUrl = urlObj.toString();
           }
         } catch (error) {
-          // If URL parsing fails, use original URL
           console.error("Failed to parse reset password URL:", error);
         }
       }
@@ -189,8 +176,6 @@ export const auth = betterAuth({
         checkout({
           products: [
             {
-              // Product ID can be overridden via POLAR_PRO_PRODUCT_ID env var
-              // Default value matches apps/web/src/lib/polar-products.ts
               productId: getPolarProducts().pro.id,
               slug: getPolarProducts().pro.slug,
             },

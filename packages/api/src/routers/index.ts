@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { todoRouter } from "./todo";
 import { env } from "cloudflare:workers";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, publicProcedure, router } from "../index";
@@ -7,6 +8,7 @@ export const appRouter = router({
   healthCheck: publicProcedure.query(() => {
     return "OK";
   }),
+  todo: todoRouter,
   uploadFile: protectedProcedure
     .input(z.instanceof(FormData))
     .mutation(async ({ ctx, input }) => {
@@ -26,17 +28,17 @@ export const appRouter = router({
           cause: `File size is ${file.size} bytes, max size is 5MB`,
         });
       }
-      
-      const data = await ctx.context.env.PUBLIC_BUCKET.put(
+
+      const data = await ctx.services.buckets.put(
+        file,
         file.name,
-        file.stream()
+        "PUBLIC_BUCKET",
+        {
+          httpMetadata: {
+            contentType: file.type,
+          },
+        }
       );
-      if (!data) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to upload file",
-        });
-      }
       return {
         url: `${env.BUCKET_URL}/${data.key}`,
       };
@@ -49,7 +51,7 @@ export const appRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { key } = input;
-      await ctx.context.env.PUBLIC_BUCKET.delete(key);
+      await ctx.services.buckets.delete(key, "PUBLIC_BUCKET");
       return {
         message: "File deleted successfully",
       };

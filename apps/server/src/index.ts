@@ -3,11 +3,22 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { env } from "cloudflare:workers";
 import { trpcServer } from "@hono/trpc-server";
+import { servicesMiddleware } from "./middleware/services";
 import { auth } from "@better-auth-cloudflare-starter/auth";
 import { createContext } from "@better-auth-cloudflare-starter/api/context";
+import type { Services } from "@better-auth-cloudflare-starter/api/services";
 import { appRouter } from "@better-auth-cloudflare-starter/api/routers/index";
 
-const app = new Hono<{ Bindings: CloudflareBindings }>();
+export type HonoEnv = {
+  Bindings: CloudflareBindings;
+  Variables: {
+    services: Services;
+  };
+};
+
+const app = new Hono<HonoEnv>();
+
+app.use("*", servicesMiddleware);
 
 app.use(logger());
 app.use(

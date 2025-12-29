@@ -1,0 +1,260 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useTRPC } from "@/utils/trpc";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Trash2, Plus, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useCustomerState } from "@/hooks/use-polar";
+import { POLAR_PRODUCTS, isProduct } from "@/lib/polar-products";
+import { useCheckoutEmbed } from "@/hooks/use-polar";
+
+export const Route = createFileRoute("/__authenticated/todos")({
+  component: TodosPage,
+});
+
+const FREE_TIER_LIMIT = 10;
+
+function TodosPage() {
+  const trpc = useTRPC();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+
+  const { data: customerState } = useCustomerState();
+  const checkoutEmbed = useCheckoutEmbed();
+
+  const hasPro =
+    customerState &&
+    (customerState as any).activeSubscriptions?.some((sub: any) =>
+      isProduct(sub.productId, "pro")
+    );
+
+  const todos = useQuery(trpc.todo.list.queryOptions());
+  const stats = useQuery(trpc.todo.stats.queryOptions());
+  
+  const createTodo = useMutation(
+    trpc.todo.create.mutationOptions({
+      onSuccess: () => {
+        toast.success("Todo created!");
+        setTitle("");
+        setDescription("");
+        todos.refetch();
+        stats.refetch();
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    })
+  );
+
+  const toggleTodo = useMutation(
+    trpc.todo.toggleComplete.mutationOptions({
+      onSuccess: () => {
+        todos.refetch();
+        stats.refetch();
+      },
+    })
+  );
+
+  const deleteTodo = useMutation(
+    trpc.todo.delete.mutationOptions({
+      onSuccess: () => {
+        toast.success("Todo deleted!");
+        todos.refetch();
+        stats.refetch();
+      },
+    })
+  );
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+
+    createTodo.mutate({
+      title: title.trim(),
+      description: description.trim() || undefined,
+    });
+  };
+
+  const todoCount = stats.data?.total || 0;
+  const isAtLimit = !hasPro && todoCount >= FREE_TIER_LIMIT;
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">My Todos</h1>
+        <p className="text-muted-foreground">
+          Manage your tasks and stay organized
+        </p>
+      </div>
+
+      {/* Stats */}
+      {stats.data && (
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Total</CardDescription>
+              <CardTitle className="text-2xl">{stats.data.total}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Completed</CardDescription>
+              <CardTitle className="text-2xl">{stats.data.completed}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Pending</CardDescription>
+              <CardTitle className="text-2xl">{stats.data.pending}</CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      )}
+
+      {/* Tier Limit Warning */}
+      {!hasPro && (
+        <Card className="mb-6 border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Badge variant="outline">Free Plan</Badge>
+              {todoCount}/{FREE_TIER_LIMIT} todos used
+            </CardTitle>
+            <CardDescription>
+              {isAtLimit
+                ? "You've reached your free plan limit. Upgrade to Pro for unlimited todos!"
+                : `You can create ${FREE_TIER_LIMIT - todoCount} more todos on the free plan.`}
+            </CardDescription>
+          </CardHeader>
+          {isAtLimit && (
+            <CardContent>
+              <Button
+                onClick={() =>
+                  checkoutEmbed.mutate({
+                    productId: POLAR_PRODUCTS.pro.id,
+                    slug: POLAR_PRODUCTS.pro.slug,
+                  })
+                }
+                size="sm"
+              >
+                Upgrade to Pro
+              </Button>
+            </CardContent>
+          )}
+        </Card>
+      )}
+
+      {/* Create Todo Form */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Add New Todo</CardTitle>
+          <CardDescription>
+            {hasPro
+              ? "Create unlimited todos with Pro"
+              : `Free plan: ${FREE_TIER_LIMIT - todoCount} remaining`}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              placeholder="Todo title..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              disabled={createTodo.isPending || isAtLimit}
+              maxLength={200}
+            />
+            <Input
+              placeholder="Description (optional)..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              disabled={createTodo.isPending || isAtLimit}
+              maxLength={1000}
+            />
+            <Button
+              type="submit"
+              disabled={createTodo.isPending || !title.trim() || isAtLimit}
+            >
+              {createTodo.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Todo
+                </>
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Todos List */}
+      <div className="space-y-3">
+        {todos.isLoading && (
+          <div className="text-center py-8 text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+            Loading todos...
+          </div>
+        )}
+
+        {todos.data && todos.data.length === 0 && (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              No todos yet. Create your first one above!
+            </CardContent>
+          </Card>
+        )}
+
+        {todos.data?.map((todo) => (
+          <Card key={todo.id} className={todo.completed ? "opacity-60" : ""}>
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  checked={todo.completed}
+                  onCheckedChange={() =>
+                    toggleTodo.mutate({ id: todo.id })
+                  }
+                  disabled={toggleTodo.isPending}
+                  className="mt-1"
+                />
+                <div className="flex-1 min-w-0">
+                  <h3
+                    className={`font-medium ${
+                      todo.completed ? "line-through text-muted-foreground" : ""
+                    }`}
+                  >
+                    {todo.title}
+                  </h3>
+                  {todo.description && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {todo.description}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Created {new Date(todo.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => deleteTodo.mutate({ id: todo.id })}
+                  disabled={deleteTodo.isPending}
+                  className="shrink-0"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+

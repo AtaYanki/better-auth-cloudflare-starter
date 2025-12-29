@@ -4,6 +4,12 @@
     ".": {
       "default": "./src/index.ts"
     },
+    "./services": {
+      "default": "./src/services/index.ts"
+    },
+    "./context": {
+      "default": "./src/context.ts"
+    },
     "./*": {
       "default": "./src/*.ts"
     }

@@ -70,7 +70,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         replace={(href) => navigate({ href, replace: true })}
         Link={({ href, ...props }) => <Link to={href} {...props} />}
         onSessionChange={() => {
-          console.log("session changed");
           invalidate();
         }}
       >

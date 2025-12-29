@@ -26,7 +26,7 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { useScrollPosition } from "@/hooks/use-scroll-position";
 import { POLAR_PRODUCTS, isProduct } from "@/lib/polar-products";
 import { OrganizationSwitcher } from "@daveyplate/better-auth-ui";
-import { LineChart, LogOut, Settings, Sparkles } from "lucide-react";
+import { LineChart, LogOut, Settings, Sparkles, CheckSquare } from "lucide-react";
 import { useCustomerState, useCheckoutEmbed } from "@/hooks/use-polar";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -223,6 +223,12 @@ export default function Header() {
                       Upgrade to Pro
                     </DropdownMenuItem>
                   )}
+                  <Link to="/todos">
+                    <DropdownMenuItem>
+                      <CheckSquare />
+                      Todos
+                    </DropdownMenuItem>
+                  </Link>
                   <Link to="/account/$path" params={{ path: "settings" }}>
                     <DropdownMenuItem>
                       <Settings />

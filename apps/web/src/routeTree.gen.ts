@@ -15,6 +15,7 @@ import { Route as _authenticatedRouteImport } from './routes/__authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthVerifyEmailRouteImport } from './routes/auth/verify-email'
 import { Route as AuthPathRouteImport } from './routes/auth/$path'
+import { Route as _authenticatedTodosRouteImport } from './routes/__authenticated/todos'
 import { Route as _authenticatedDashboardRouteImport } from './routes/__authenticated/dashboard'
 import { Route as _authenticatedOrganizationPathRouteImport } from './routes/__authenticated/organization/$path'
 import { Route as _authenticatedAccountPathRouteImport } from './routes/__authenticated/account/$path'
@@ -48,6 +49,11 @@ const AuthPathRoute = AuthPathRouteImport.update({
   path: '/auth/$path',
   getParentRoute: () => rootRouteImport,
 } as any)
+const _authenticatedTodosRoute = _authenticatedTodosRouteImport.update({
+  id: '/todos',
+  path: '/todos',
+  getParentRoute: () => _authenticatedRoute,
+} as any)
 const _authenticatedDashboardRoute = _authenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/accept-invitation': typeof AcceptInvitationRoute
   '/success': typeof SuccessRoute
   '/dashboard': typeof _authenticatedDashboardRoute
+  '/todos': typeof _authenticatedTodosRoute
   '/auth/$path': typeof AuthPathRoute
   '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/account/$path': typeof _authenticatedAccountPathRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/accept-invitation': typeof AcceptInvitationRoute
   '/success': typeof SuccessRoute
   '/dashboard': typeof _authenticatedDashboardRoute
+  '/todos': typeof _authenticatedTodosRoute
   '/auth/$path': typeof AuthPathRoute
   '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/account/$path': typeof _authenticatedAccountPathRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/accept-invitation': typeof AcceptInvitationRoute
   '/success': typeof SuccessRoute
   '/__authenticated/dashboard': typeof _authenticatedDashboardRoute
+  '/__authenticated/todos': typeof _authenticatedTodosRoute
   '/auth/$path': typeof AuthPathRoute
   '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/__authenticated/account/$path': typeof _authenticatedAccountPathRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/accept-invitation'
     | '/success'
     | '/dashboard'
+    | '/todos'
     | '/auth/$path'
     | '/auth/verify-email'
     | '/account/$path'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
     | '/accept-invitation'
     | '/success'
     | '/dashboard'
+    | '/todos'
     | '/auth/$path'
     | '/auth/verify-email'
     | '/account/$path'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/accept-invitation'
     | '/success'
     | '/__authenticated/dashboard'
+    | '/__authenticated/todos'
     | '/auth/$path'
     | '/auth/verify-email'
     | '/__authenticated/account/$path'
@@ -185,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthPathRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/__authenticated/todos': {
+      id: '/__authenticated/todos'
+      path: '/todos'
+      fullPath: '/todos'
+      preLoaderRoute: typeof _authenticatedTodosRouteImport
+      parentRoute: typeof _authenticatedRoute
+    }
     '/__authenticated/dashboard': {
       id: '/__authenticated/dashboard'
       path: '/dashboard'
@@ -211,12 +230,14 @@ declare module '@tanstack/react-router' {
 
 interface _authenticatedRouteChildren {
   _authenticatedDashboardRoute: typeof _authenticatedDashboardRoute
+  _authenticatedTodosRoute: typeof _authenticatedTodosRoute
   _authenticatedAccountPathRoute: typeof _authenticatedAccountPathRoute
   _authenticatedOrganizationPathRoute: typeof _authenticatedOrganizationPathRoute
 }
 
 const _authenticatedRouteChildren: _authenticatedRouteChildren = {
   _authenticatedDashboardRoute: _authenticatedDashboardRoute,
+  _authenticatedTodosRoute: _authenticatedTodosRoute,
   _authenticatedAccountPathRoute: _authenticatedAccountPathRoute,
   _authenticatedOrganizationPathRoute: _authenticatedOrganizationPathRoute,
 }

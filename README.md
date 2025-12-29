@@ -54,7 +54,7 @@ A production-ready full-stack starter template built on Cloudflare Workers, feat
 1. **Clone and install dependencies:**
    ```bash
    git clone <your-repo-url>
-   cd authedge
+   cd better-auth-cloudflare-starter
    bun install
    ```
 
@@ -64,12 +64,20 @@ A production-ready full-stack starter template built on Cloudflare Workers, feat
 
 3. **Configure environment variables:**
 
-   Create `.env` files in both `apps/web/` and `apps/server/`:
+   Copy the example environment files and fill in your values:
+
+   ```bash
+   # Copy example files
+   cp apps/server/.env.example apps/server/.env
+   cp apps/web/.env.example apps/web/.env
+   ```
+
+   Then edit the `.env` files with your actual values:
 
    ```bash
    # apps/server/.env
    DATABASE_URL="postgresql://user:password@host/database"
-   BETTER_AUTH_SECRET="your-super-secret-key"
+   BETTER_AUTH_SECRET="your-super-secret-key"  # Generate with: openssl rand -base64 32
    BETTER_AUTH_URL="http://localhost:3000"
    CORS_ORIGIN="http://localhost:3001"
    RESEND_API_KEY="re_your-resend-key"
@@ -77,7 +85,14 @@ A production-ready full-stack starter template built on Cloudflare Workers, feat
    POLAR_SUCCESS_URL="http://localhost:3001/success"
 
    # apps/web/.env
-   SERVER_URL="http://localhost:3000"
+   VITE_SERVER_URL="http://localhost:3000"
+   ```
+
+   **Generate a secure `BETTER_AUTH_SECRET`:**
+   ```bash
+   openssl rand -base64 32
+   # or
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
    ```
 
 4. **Set up the database:**
@@ -240,20 +255,49 @@ better-auth-cloudflare-starter/
 - **UI components**: Customize auth components in `packages/better-auth-ui/`
 
 ### Payments
-- **Products**: Update Polar product configuration in `packages/auth/src/index.ts`
-- **Pricing**: Modify checkout flows and success URLs
+- **Products**: Update Polar product configuration in:
+  - `packages/auth/src/lib/polar-products.ts` (server)
+  - `apps/web/src/lib/polar-products.ts` (web app)
+- **Product ID**: Set via `POLAR_PRO_PRODUCT_ID` env var or update defaults in config files
+- **Pricing**: Modify checkout flows and success URLs in `packages/auth/src/index.ts`
 
 ## 🗺️ Roadmap
 
 ### Planned Features
 - [ ] **Cloudflare R2 Integration** - User avatar uploads and file storage
-- [ ] **Multi-tenant Support** - Organization/account management
+- [ ] **Multi-tenant Support** - Organization/account management (partially implemented)
 - [ ] **API Rate Limiting** - Request throttling and abuse prevention
 - [ ] **Audit Logs** - User activity tracking and compliance
 - [ ] **Admin Dashboard** - User management and analytics
 - [ ] **Webhook Support** - Integration with external services
 - [ ] **Mobile App** - React Native companion app
 - [ ] **Advanced Analytics** - User behavior and conversion tracking
+
+## 🐛 Troubleshooting
+
+### Database Connection Issues
+- Ensure your `DATABASE_URL` is correct and includes SSL parameters if needed
+- For Neon: Make sure to use the connection string with SSL mode enabled
+- Check that your database is accessible from your IP (Neon allows all by default)
+
+### Authentication Not Working
+- Verify `BETTER_AUTH_SECRET` is set and at least 32 characters long
+- Ensure `BETTER_AUTH_URL` matches your server URL exactly
+- Check that `CORS_ORIGIN` matches your web app URL exactly
+
+### Email Not Sending
+- Verify `RESEND_API_KEY` is correct and has proper permissions
+- Check Resend dashboard for email delivery status
+- Ensure sender email is verified in Resend
+
+### Polar Payment Issues
+- Verify `POLAR_ACCESS_TOKEN` is correct
+- Check that product ID matches in both server and web configs
+- Ensure `POLAR_SUCCESS_URL` is accessible
+
+### Port Already in Use
+- Change ports in `wrangler.jsonc` files if 3000/3001 are taken
+- Update environment variables accordingly
 
 ### Contributing
 
