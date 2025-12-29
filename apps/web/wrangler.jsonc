@@ -4,12 +4,12 @@
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
-  "routes": [
-    {
-      "pattern": "your-frontend-domain.com",
-      "custom_domain": true
-    }
-  ],
+  // "routes": [
+  //   {
+  //     "pattern": "your-frontend-domain.com",
+  //     "custom_domain": true
+  //   }
+  // ],
   "vars": {
     "NODE_ENV": "development",
     "VITE_SERVER_URL": "http://localhost:3000"
