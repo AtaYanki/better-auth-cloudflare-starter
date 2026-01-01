@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 /**
  * Query hook to fetch customer state from Polar
  */
-export function useCustomerState() {
+export function useCustomerState({enabled = true}: {enabled?: boolean}) {
   return useQuery({
     queryKey: ["polar", "customer", "state"],
     queryFn: async () => {
@@ -12,6 +12,7 @@ export function useCustomerState() {
       return data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled,
   });
 }
 

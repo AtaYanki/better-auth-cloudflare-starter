@@ -10,13 +10,27 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({ context }: CreateContextOptions) {
-  const session = await auth.api.getSession({
-    headers: context.req.raw.headers,
-  });
-  
-  const customerState = await auth.api.state({
-    headers: context.req.raw.headers,
-  });
+  // Gracefully handle auth failures for public procedures
+  let session = null;
+  let customerState = null;
+
+  try {
+    session = await auth.api.getSession({
+      headers: context.req.raw.headers,
+    });
+  } catch (error) {
+    // Session fetch failed - this is expected for unauthenticated requests
+    // Continue with null session
+  }
+
+  try {
+    customerState = await auth.api.state({
+      headers: context.req.raw.headers,
+    });
+  } catch (error) {
+    // Customer state fetch failed - this is expected for unauthenticated requests
+    // Continue with null customerState
+  }
 
   return {
     session,

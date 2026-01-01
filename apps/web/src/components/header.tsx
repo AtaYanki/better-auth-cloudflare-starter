@@ -26,7 +26,13 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { useScrollPosition } from "@/hooks/use-scroll-position";
 import { POLAR_PRODUCTS, isProduct } from "@/lib/polar-products";
 import { OrganizationSwitcher } from "@daveyplate/better-auth-ui";
-import { LineChart, LogOut, Settings, Sparkles, CheckSquare } from "lucide-react";
+import {
+  LineChart,
+  LogOut,
+  Settings,
+  Sparkles,
+  CheckSquare,
+} from "lucide-react";
 import { useCustomerState, useCheckoutEmbed } from "@/hooks/use-polar";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -43,14 +49,14 @@ export default function Header() {
   const checkoutEmbed = useCheckoutEmbed();
   const { isScrolled } = useScrollPosition();
   const { data: session } = authClient.useSession();
-  const { data: customerState } = useCustomerState();
+  const { data: customerState } = useCustomerState({ enabled: !!session });
 
   // Check if user has active Pro subscription
-  const hasPro =
-    customerState &&
-    customerState.activeSubscriptions.some((sub) =>
-      isProduct(sub.productId, "pro")
-    );
+  const hasPro = customerState
+    ? customerState.activeSubscriptions?.some((sub) =>
+        isProduct(sub.productId, "pro")
+      )
+    : false;
 
   return (
     <header

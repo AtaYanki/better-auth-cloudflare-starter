@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "scheme": "better-auth-cloudflare-starter",
+    "userInterfaceStyle": "automatic",
+    "orientation": "default",
+    "web": {
+      "bundler": "metro"
+    },
+    "name": "better-auth-cloudflare-starter",
+    "slug": "better-auth-cloudflare-starter",
+    "plugins": ["expo-font"],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

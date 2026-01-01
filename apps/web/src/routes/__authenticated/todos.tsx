@@ -12,6 +12,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCustomerState } from "@/hooks/use-polar";
 import { POLAR_PRODUCTS, isProduct } from "@/lib/polar-products";
 import { useCheckoutEmbed } from "@/hooks/use-polar";
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/__authenticated/todos")({
   component: TodosPage,
@@ -23,8 +24,8 @@ function TodosPage() {
   const trpc = useTRPC();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-
-  const { data: customerState } = useCustomerState();
+  const { data: session } = authClient.useSession();
+  const { data: customerState } = useCustomerState({enabled: !!session});
   const checkoutEmbed = useCheckoutEmbed();
 
   const hasPro =
