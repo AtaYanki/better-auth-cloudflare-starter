@@ -1,176 +1,207 @@
-import { Button, ErrorView, Spinner, Surface, TextField } from "heroui-native";
-import { useState, useEffect } from "react";
-import { View, Text } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import {
+	Button,
+	FieldError,
+	InputOTP,
+	Label,
+	Spinner,
+	Surface,
+	TextField,
+} from "heroui-native";
+import { useEffect, useState } from "react";
+import { Text, View } from "react-native";
 import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/utils/trpc";
-import { router, useLocalSearchParams } from "expo-router";
 
 export function VerifyOTP() {
-  const params = useLocalSearchParams<{ email?: string }>();
-  const email = params.email || "";
-  const [otp, setOtp] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isResending, setIsResending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [fieldError, setFieldError] = useState<string | undefined>();
-  const [success, setSuccess] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+	const params = useLocalSearchParams<{ email?: string }>();
+	const email = params.email || "";
+	const [otp, setOtp] = useState("");
+	const [isLoading, setIsLoading] = useState(false);
+	const [isResending, setIsResending] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [fieldError, setFieldError] = useState<string | undefined>();
+	const [success, setSuccess] = useState(false);
+	const [countdown, setCountdown] = useState(0);
 
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [countdown]);
+	useEffect(() => {
+		if (countdown > 0) {
+			const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+			return () => clearTimeout(timer);
+		}
+	}, [countdown]);
 
-  async function handleVerify() {
-    if (!otp.trim() || otp.length !== 6) {
-      setFieldError("Please enter a valid 6-digit code");
-      return;
-    }
+	async function handleVerify() {
+		if (!otp || otp.length !== 6) {
+			setFieldError("Please enter a valid 6-digit code");
+			return;
+		}
 
-    if (!email) {
-      setError("Email is required");
-      return;
-    }
+		if (!email) {
+			setError("Email is required");
+			return;
+		}
 
-    setIsLoading(true);
-    setError(null);
-    setFieldError(undefined);
+		setIsLoading(true);
+		setError(null);
+		setFieldError(undefined);
 
-    try {
-      await authClient.emailOtp.verifyEmail({
-        email,
-        otp: otp.trim(),
-      });
+		try {
+			await authClient.emailOtp.verifyEmail({
+				email,
+				otp: otp.trim(),
+			});
 
-      setSuccess(true);
-      queryClient.refetchQueries();
-      
-      // Redirect to tabs after a short delay
-      setTimeout(() => {
-        router.replace("/sign-in");
-      }, 1500);
-    } catch (err: any) {
-      setError(err?.error?.message || "Invalid verification code. Please try again.");
-      setIsLoading(false);
-    }
-  }
+			setSuccess(true);
+			queryClient.refetchQueries();
 
-  async function handleResend() {
-    if (!email) {
-      setError("Email is required");
-      return;
-    }
+			// Redirect to tabs after a short delay
+			setTimeout(() => {
+				router.replace("/sign-in");
+			}, 1500);
+		} catch (err: unknown) {
+			setError(
+				err instanceof Error
+					? err.message
+					: "Invalid verification code. Please try again.",
+			);
+			setIsLoading(false);
+		}
+	}
 
-    setIsResending(true);
-    setError(null);
+	async function handleComplete(code: string) {
+		setOtp(code);
+		// Auto-submit when all 6 digits are entered
+		if (code.length === 6 && email) {
+			await handleVerify();
+		}
+	}
 
-    try {
-      await authClient.emailOtp.sendVerificationOtp({
-        email,
-        type: "email-verification",
-      });
+	async function handleResend() {
+		if (!email) {
+			setError("Email is required");
+			return;
+		}
 
-      setCountdown(60); // 60 second countdown
-      setIsResending(false);
-    } catch (err: any) {
-      setError(err?.error?.message || "Failed to resend code. Please try again.");
-      setIsResending(false);
-    }
-  }
+		setIsResending(true);
+		setError(null);
 
-  if (success) {
-    return (
-      <Surface variant="tertiary" className="p-6 rounded-xl">
-        <View className="items-center gap-4">
-          <Text className="text-2xl font-bold text-foreground">Email Verified!</Text>
-          <Text className="text-muted-foreground text-center">
-            Your email has been successfully verified. Redirecting...
-          </Text>
-        </View>
-      </Surface>
-    );
-  }
+		try {
+			await authClient.emailOtp.sendVerificationOtp({
+				email,
+				type: "email-verification",
+			});
 
-  return (
-    <Surface variant="tertiary" className="p-6 rounded-xl">
-      <View className="mb-4">
-        <Text className="text-lg font-semibold text-foreground mb-2">
-          Verify Your Email
-        </Text>
-        <Text className="text-muted-foreground text-sm">
-          We've sent a 6-digit verification code to
-        </Text>
-        <Text className="text-foreground font-medium mt-1">{email}</Text>
-      </View>
+			setCountdown(60); // 60 second countdown
+			setIsResending(false);
+		} catch (err: unknown) {
+			setError(
+				err instanceof Error
+					? err.message
+					: "Failed to resend code. Please try again.",
+			);
+			setIsResending(false);
+		}
+	}
 
-      <ErrorView isInvalid={!!error} className="mb-4">
-        {error}
-      </ErrorView>
+	if (success) {
+		return (
+			<Surface variant="secondary" className="rounded-xl p-6">
+				<View className="items-center gap-4">
+					<Text className="font-bold text-2xl text-foreground">
+						Email Verified!
+					</Text>
+					<Text className="text-center text-muted-foreground">
+						Your email has been successfully verified. Redirecting...
+					</Text>
+				</View>
+			</Surface>
+		);
+	}
 
-      <View className="gap-4">
-        <TextField isInvalid={!!fieldError}>
-          <TextField.Label>Verification Code</TextField.Label>
-          <TextField.Input
-            value={otp}
-            onChangeText={(text) => {
-              // Only allow numbers and limit to 6 digits
-              const numericText = text.replace(/[^0-9]/g, "").slice(0, 6);
-              setOtp(numericText);
-              setError(null);
-              if (fieldError) {
-                setFieldError(undefined);
-              }
-            }}
-            placeholder="000000"
-            keyboardType="number-pad"
-            maxLength={6}
-            editable={!isLoading}
-            autoFocus
-          />
-          {fieldError && (
-            <TextField.ErrorMessage>{fieldError}</TextField.ErrorMessage>
-          )}
-        </TextField>
+	return (
+		<Surface variant="secondary" className="rounded-xl p-6">
+			<View className="mb-4">
+				<Text className="mb-2 font-semibold text-foreground text-lg">
+					Verify Your Email
+				</Text>
+				<Text className="text-muted-foreground text-sm">
+					We've sent a 6-digit verification code to
+				</Text>
+				<Text className="mt-1 font-medium text-foreground">{email}</Text>
+			</View>
 
-        <Button
-          onPress={handleVerify}
-          isDisabled={isLoading || otp.length !== 6}
-          className="mt-2"
-          size="lg"
-        >
-          {isLoading ? (
-            <View className="flex-row items-center gap-2">
-              <Spinner size="sm" color="default" />
-              <Button.Label>Verifying...</Button.Label>
-            </View>
-          ) : (
-            <Button.Label>Verify Email</Button.Label>
-          )}
-        </Button>
+			{error && <FieldError className="mb-4">{error}</FieldError>}
 
-        <View className="flex-row items-center justify-center gap-2 mt-2">
-          <Text className="text-muted-foreground text-sm">
-            Didn't receive the code?
-          </Text>
-          <Button
-            variant="ghost"
-            size="sm"
-            onPress={handleResend}
-            isDisabled={isResending || countdown > 0}
-          >
-            {isResending ? (
-              <Spinner size="sm" color="default" />
-            ) : countdown > 0 ? (
-              <Button.Label>Resend in {countdown}s</Button.Label>
-            ) : (
-              <Button.Label>Resend Code</Button.Label>
-            )}
-          </Button>
-        </View>
-      </View>
-    </Surface>
-  );
+			<View className="gap-4">
+				<TextField isInvalid={!!fieldError}>
+					<Label>Verification Code</Label>
+					<InputOTP
+						value={otp}
+						onChange={(value) => {
+							setOtp(value);
+							setError(null);
+							if (fieldError) {
+								setFieldError(undefined);
+							}
+						}}
+						onComplete={handleComplete}
+						maxLength={6}
+						isDisabled={isLoading}
+						isInvalid={!!fieldError}
+						inputMode="numeric"
+					>
+						<InputOTP.Group>
+							<InputOTP.Slot index={0} />
+							<InputOTP.Slot index={1} />
+							<InputOTP.Slot index={2} />
+						</InputOTP.Group>
+						<InputOTP.Separator />
+						<InputOTP.Group>
+							<InputOTP.Slot index={3} />
+							<InputOTP.Slot index={4} />
+							<InputOTP.Slot index={5} />
+						</InputOTP.Group>
+					</InputOTP>
+					{fieldError && <FieldError>{fieldError}</FieldError>}
+				</TextField>
+
+				<Button
+					onPress={handleVerify}
+					isDisabled={isLoading || otp.length !== 6}
+					className="mt-2"
+					size="lg"
+				>
+					{isLoading ? (
+						<View className="flex-row items-center gap-2">
+							<Spinner size="sm" color="default" />
+							<Button.Label>Verifying...</Button.Label>
+						</View>
+					) : (
+						<Button.Label>Verify Email</Button.Label>
+					)}
+				</Button>
+
+				<View className="mt-2 flex-row items-center justify-center gap-2">
+					<Text className="text-muted-foreground text-sm">
+						Didn't receive the code?
+					</Text>
+					<Button
+						variant="ghost"
+						size="sm"
+						onPress={handleResend}
+						isDisabled={isResending || countdown > 0}
+					>
+						{isResending ? (
+							<Spinner size="sm" color="default" />
+						) : countdown > 0 ? (
+							<Button.Label>Resend in {countdown}s</Button.Label>
+						) : (
+							<Button.Label>Resend Code</Button.Label>
+						)}
+					</Button>
+				</View>
+			</View>
+		</Surface>
+	);
 }
-

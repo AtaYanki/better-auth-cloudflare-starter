@@ -1,27 +1,27 @@
 {
-  "name": "@better-auth-cloudflare-starter/auth",
-  "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      "default": "./src/*.ts"
-    }
-  },
-  "type": "module",
-  "scripts": {},
-  "devDependencies": {
-    "typescript": "catalog:",
-    "@better-auth-cloudflare-starter/config": "workspace:*"
-  },
-  "dependencies": {
-    "better-auth": "catalog:",
-    "@polar-sh/better-auth": "catalog:",
-    "@polar-sh/sdk": "^0.34.16",
-    "dotenv": "catalog:",
-    "zod": "catalog:",
-    "@better-auth-cloudflare-starter/db": "workspace:*",
-    "@better-auth-cloudflare-starter/transactional": "workspace:*",
-    "resend": "catalog:"
-  }
+	"name": "@better-auth-cloudflare-starter/auth",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"type": "module",
+	"scripts": {},
+	"devDependencies": {
+		"typescript": "catalog:",
+		"@better-auth-cloudflare-starter/config": "workspace:*"
+	},
+	"dependencies": {
+		"better-auth": "catalog:",
+		"@polar-sh/better-auth": "catalog:",
+		"@polar-sh/sdk": "^0.42.5",
+		"dotenv": "catalog:",
+		"zod": "catalog:",
+		"@better-auth-cloudflare-starter/db": "workspace:*",
+		"@better-auth-cloudflare-starter/transactional": "workspace:*",
+		"resend": "catalog:"
+	}
 }

@@ -1,12 +1,13 @@
 export * from "./todo-repository";
+
 import { TodoRepository } from "./todo-repository";
 
 export type Repositories = {
-  todos: TodoRepository;
+	todos: TodoRepository;
 };
 
 export const createRepositories = (): Repositories => {
-  return {
-    todos: new TodoRepository(),
-  };
+	return {
+		todos: new TodoRepository(),
+	};
 };

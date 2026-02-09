@@ -1,29 +1,29 @@
 {
-  "name": "@better-auth-cloudflare-starter/transactional",
-  "exports": {
-    "./emails": {
-      "types": "./emails/index.ts",
-      "default": "./emails/index.ts"
-    },
-    "./emails/*": {
-      "types": "./emails/*.ts",
-      "default": "./emails/*.tsx"
-    }
-  },
-  "type": "module",
-  "scripts": {
-    "preview": "email dev --port 3002"
-  },
-  "devDependencies": {
-    "@types/react": "19.2.7",
-    "@types/react-dom": "19.2.3",
-    "react-email": "5.0.7",
-    "@react-email/preview-server": "5.0.7",
-    "@better-auth-cloudflare-starter/config": "workspace:*"
-  },
-  "dependencies": {
-    "@react-email/components": "1.0.1",
-    "react": "19.2.1",
-    "react-dom": "19.2.1"
-  }
+	"name": "@better-auth-cloudflare-starter/transactional",
+	"exports": {
+		"./emails": {
+			"types": "./emails/index.ts",
+			"default": "./emails/index.ts"
+		},
+		"./emails/*": {
+			"types": "./emails/*.ts",
+			"default": "./emails/*.tsx"
+		}
+	},
+	"type": "module",
+	"scripts": {
+		"preview": "email dev --port 3002"
+	},
+	"devDependencies": {
+		"@types/react": "19.2.13",
+		"@types/react-dom": "19.2.3",
+		"react-email": "5.2.8",
+		"@react-email/preview-server": "5.2.8",
+		"@better-auth-cloudflare-starter/config": "workspace:*"
+	},
+	"dependencies": {
+		"@react-email/components": "1.0.7",
+		"react": "19.2.4",
+		"react-dom": "19.2.4"
+	}
 }

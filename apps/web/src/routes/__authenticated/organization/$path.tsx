@@ -1,18 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { OrganizationView } from "@daveyplate/better-auth-ui";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/__authenticated/organization/$path")({
-  component: RouteComponent,
+	component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { path } = Route.useParams();
+	const { path } = Route.useParams();
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
-        <OrganizationView pathname={path} />
-      </div>
-    </div>
-  );
+	return (
+		<div className="min-h-screen bg-background">
+			<div className="container mx-auto px-4 py-6">
+				<OrganizationView pathname={path} />
+			</div>
+		</div>
+	);
 }
