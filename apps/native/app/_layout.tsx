@@ -1,8 +1,9 @@
 import "@/global.css";
 import { QueryClientProvider } from "@tanstack/react-query";
+import * as Linking from "expo-linking";
 import { Stack } from "expo-router";
 import { HeroUINativeProvider, useThemeColor } from "heroui-native";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
 	KeyboardAvoidingView,
@@ -38,6 +39,20 @@ function StackLayout() {
 }
 
 export default function Layout() {
+	const url = Linking.useURL();
+
+	useEffect(() => {
+		if (url) {
+			const parsed = Linking.parse(url);
+			if (
+				parsed.hostname === "checkout-success" ||
+				parsed.path === "checkout-success"
+			) {
+				queryClient.invalidateQueries();
+			}
+		}
+	}, [url]);
+
 	const contentWrapper = useCallback(
 		(children: React.ReactNode) => (
 			<KeyboardAvoidingView

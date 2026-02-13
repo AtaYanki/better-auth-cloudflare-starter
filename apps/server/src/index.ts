@@ -42,6 +42,28 @@ app.use(
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
+app.get("/api/payments/native-success", (c) => {
+	const checkoutId = c.req.query("checkout_id") || "";
+	const appScheme = "better-auth-cloudflare-starter";
+	const deepLink = `${appScheme}://checkout-success?checkout_id=${encodeURIComponent(checkoutId)}`;
+
+	return c.html(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Payment Successful</title>
+<meta http-equiv="refresh" content="0;url=${deepLink}">
+</head>
+<body style="font-family:system-ui;text-align:center;padding:2rem;">
+<h1>Payment Successful!</h1>
+<p>Redirecting you back to the app...</p>
+<p><a href="${deepLink}">Tap here if you are not redirected automatically</a></p>
+<script>window.location.href="${deepLink}";</script>
+</body>
+</html>`);
+});
+
 app.use(
 	rateLimiter<HonoEnv>({
 		binding: (c) => {

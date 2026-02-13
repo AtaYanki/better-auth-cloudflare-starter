@@ -1,14 +1,18 @@
 import { Redirect } from "expo-router";
-import { Avatar, Button, Card, Chip, Switch } from "heroui-native";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Avatar, Button, Card, Chip, Spinner, Switch } from "heroui-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { Container } from "@/components/container";
 import { useAppTheme } from "@/contexts/app-theme-context";
+import { useCheckout, useSubscriptionStatus } from "@/hooks/use-subscription";
 import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/utils/trpc";
 
 export default function Profile() {
 	const { data: session } = authClient.useSession();
 	const { toggleTheme, isDark } = useAppTheme();
+	const { data: subscriptionStatus, isLoading: isSubLoading } =
+		useSubscriptionStatus();
+	const { checkout, isLoading: isCheckoutLoading } = useCheckout();
 
 	if (!session) {
 		return <Redirect href="/(auth)/sign-in" />;
@@ -82,6 +86,55 @@ export default function Profile() {
 							</View>
 						)}
 					</View>
+				</Card>
+
+				{/* Subscription */}
+				<Card variant="secondary" className="p-6">
+					<Card.Title className="mb-4">Subscription</Card.Title>
+					{isSubLoading ? (
+						<View className="items-center py-4">
+							<Spinner />
+						</View>
+					) : (
+						<View className="gap-4">
+							<View className="flex-row items-center justify-between">
+								<Text className="text-foreground text-sm">Current Plan</Text>
+								<Chip
+									variant="soft"
+									color={
+										subscriptionStatus?.isProActive ? "success" : "default"
+									}
+								>
+									<Chip.Label>
+										{subscriptionStatus?.isProActive ? "Pro" : "Free"}
+									</Chip.Label>
+								</Chip>
+							</View>
+
+							{subscriptionStatus?.isProActive ? (
+								<Text className="text-muted text-sm">
+									You have access to all Pro features including unlimited todos.
+								</Text>
+							) : (
+								<View className="gap-3">
+									<Text className="text-muted text-sm">
+										Upgrade to Pro for unlimited todos and advanced features.
+									</Text>
+									<Button
+										onPress={() => checkout()}
+										isDisabled={isCheckoutLoading}
+										size="lg"
+									>
+										{isCheckoutLoading ? (
+											<ActivityIndicator color="white" size="small" />
+										) : (
+											<Button.Label>Upgrade to Pro</Button.Label>
+										)}
+									</Button>
+								</View>
+							)}
+						</View>
+					)}
 				</Card>
 
 				{/* Settings */}
