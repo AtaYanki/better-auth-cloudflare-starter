@@ -1,6 +1,12 @@
 import { Redirect } from "expo-router";
 import { Avatar, Button, Card, Chip, Spinner, Switch } from "heroui-native";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import {
+	ActivityIndicator,
+	Pressable,
+	ScrollView,
+	Text,
+	View,
+} from "react-native";
 import { Container } from "@/components/container";
 import { useAppTheme } from "@/contexts/app-theme-context";
 import { useCheckout, useSubscriptionStatus } from "@/hooks/use-subscription";

@@ -40,7 +40,7 @@
 		"rules": {
 			"recommended": true,
 			"correctness": {
-				"useExhaustiveDependencies": "info"
+				"useExhaustiveDependencies": "warn"
 			},
 			"nursery": {
 				"useSortedClasses": {

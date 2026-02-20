@@ -22,6 +22,20 @@ export const appRouter = router({
 				});
 			}
 
+			const ALLOWED_MIME_TYPES = [
+				"image/jpeg",
+				"image/png",
+				"image/webp",
+				"image/gif",
+			];
+
+			if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: `File type "${file.type}" is not allowed. Allowed types: ${ALLOWED_MIME_TYPES.join(", ")}`,
+				});
+			}
+
 			if (file.size > 1024 * 1024 * 5) {
 				// 5MB
 				throw new TRPCError({

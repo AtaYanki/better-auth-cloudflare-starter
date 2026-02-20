@@ -1,26 +1,23 @@
 {
-  "expo": {
-    "scheme": "better-auth-cloudflare-starter",
-    "userInterfaceStyle": "automatic",
-    "orientation": "default",
-    "web": {
-      "bundler": "metro"
-    },
-    "name": "better-auth-cloudflare-starter",
-    "slug": "better-auth-cloudflare-starter",
-    "plugins": [
-      "expo-font",
-      "expo-web-browser"
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    },
-    "android": {
-      "package": "com.atayanki.betterauthcloudflarestarter"
-    },
-    "ios": {
-      "bundleIdentifier": "com.atayanki.betterauthcloudflarestarter"
-    }
-  }
+	"expo": {
+		"scheme": "better-auth-cloudflare-starter",
+		"userInterfaceStyle": "automatic",
+		"orientation": "default",
+		"web": {
+			"bundler": "metro"
+		},
+		"name": "better-auth-cloudflare-starter",
+		"slug": "better-auth-cloudflare-starter",
+		"plugins": ["expo-font", "expo-web-browser"],
+		"experiments": {
+			"typedRoutes": true,
+			"reactCompiler": true
+		},
+		"android": {
+			"package": "com.atayanki.betterauthcloudflarestarter"
+		},
+		"ios": {
+			"bundleIdentifier": "com.atayanki.betterauthcloudflarestarter"
+		}
+	}
 }

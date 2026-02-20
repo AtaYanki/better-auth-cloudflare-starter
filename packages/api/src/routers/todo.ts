@@ -3,18 +3,12 @@ import { protectedProcedure, router } from "../index";
 
 export const todoRouter = router({
 	list: protectedProcedure.query(async ({ ctx }) => {
-		if (!ctx.session?.user) {
-			throw new Error("User not found");
-		}
 		return ctx.services.todos.list(ctx.session.user.id);
 	}),
 
 	get: protectedProcedure
 		.input(z.object({ id: z.string() }))
 		.query(async ({ ctx, input }) => {
-			if (!ctx.session?.user) {
-				throw new Error("User not found");
-			}
 			return ctx.services.todos.get(input.id, ctx.session.user.id);
 		}),
 
@@ -26,9 +20,6 @@ export const todoRouter = router({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			if (!ctx.session?.user) {
-				throw new Error("User not found");
-			}
 			return ctx.services.todos.create(ctx.session.user.id, input, ctx);
 		}),
 
@@ -42,9 +33,6 @@ export const todoRouter = router({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			if (!ctx.session?.user) {
-				throw new Error("User not found");
-			}
 			const { id, ...data } = input;
 			return ctx.services.todos.update(id, ctx.session.user.id, data);
 		}),
@@ -52,25 +40,16 @@ export const todoRouter = router({
 	toggleComplete: protectedProcedure
 		.input(z.object({ id: z.string() }))
 		.mutation(async ({ ctx, input }) => {
-			if (!ctx.session?.user) {
-				throw new Error("User not found");
-			}
 			return ctx.services.todos.toggleComplete(input.id, ctx.session.user.id);
 		}),
 
 	delete: protectedProcedure
 		.input(z.object({ id: z.string() }))
 		.mutation(async ({ ctx, input }) => {
-			if (!ctx.session?.user) {
-				throw new Error("User not found");
-			}
 			return ctx.services.todos.delete(input.id, ctx.session.user.id);
 		}),
 
 	stats: protectedProcedure.query(async ({ ctx }) => {
-		if (!ctx.session?.user) {
-			throw new Error("User not found");
-		}
 		return ctx.services.todos.getStats(ctx.session.user.id);
 	}),
 });

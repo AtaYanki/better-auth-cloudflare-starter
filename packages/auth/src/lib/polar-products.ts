@@ -7,12 +7,16 @@ export interface PolarProduct {
 	description?: string;
 }
 
-export function getPolarProducts(env?: {
-	POLAR_PRO_PRODUCT_ID?: string;
-}): Record<ProductSlug, PolarProduct> {
+export function getPolarProducts(): Record<ProductSlug, PolarProduct> {
+	const productId = process.env.POLAR_PRO_PRODUCT_ID;
+	if (!productId) {
+		throw new Error(
+			"POLAR_PRO_PRODUCT_ID environment variable is required. Set it in your .env file.",
+		);
+	}
 	return {
 		pro: {
-			id: env?.POLAR_PRO_PRODUCT_ID || "808493dd-7db3-41b4-ba29-c62baa9dda3b",
+			id: productId,
 			slug: "pro",
 			name: "Pro",
 			description: "Everything you need to ship faster with advanced features",

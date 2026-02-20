@@ -21,9 +21,8 @@ import { Resend } from "resend";
 import { polarClient } from "./lib/payments";
 import { getPolarProducts } from "./lib/polar-products";
 
-const resend = new Resend(
-	process.env.RESEND_API_KEY || env.RESEND_API_KEY || "re_placeholder",
-);
+const resend = new Resend(process.env.RESEND_API_KEY || env.RESEND_API_KEY);
+const EMAIL_FROM = "BetterAuth <onboarding@resend.dev>";
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
@@ -36,7 +35,7 @@ export const auth = betterAuth({
 			enabled: true,
 			sendChangeEmailConfirmation: async ({ user, token }) => {
 				await resend.emails.send({
-					from: "BetterAuth <onboarding@resend.dev>",
+					from: EMAIL_FROM,
 					to: user.email,
 					subject: "Confirm your email address",
 					react: OTPVerificationEmail({
@@ -83,7 +82,7 @@ export const auth = betterAuth({
 			}
 
 			await resend.emails.send({
-				from: "BetterAuth <onboarding@resend.dev>",
+				from: EMAIL_FROM,
 				to: user.email,
 				subject: "Reset your password",
 				react: PasswordResetEmail({
@@ -127,7 +126,7 @@ export const auth = betterAuth({
 			async sendVerificationOTP({ email, otp, type }, ctx) {
 				if (type === "sign-in") {
 					await resend.emails.send({
-						from: "BetterAuth <onboarding@resend.dev>",
+						from: EMAIL_FROM,
 						to: email,
 						subject: `${otp} is your sign in code`,
 						react: SignInOTPEmail({
@@ -143,7 +142,7 @@ export const auth = betterAuth({
 					});
 				} else if (type === "email-verification") {
 					await resend.emails.send({
-						from: "BetterAuth <onboarding@resend.dev>",
+						from: EMAIL_FROM,
 						to: email,
 						subject: `${otp} is your verification code`,
 						react: OTPVerificationEmail({
@@ -154,7 +153,7 @@ export const auth = betterAuth({
 					});
 				} else {
 					await resend.emails.send({
-						from: "BetterAuth <onboarding@resend.dev>",
+						from: EMAIL_FROM,
 						to: email,
 						subject: `${otp} is your password reset code`,
 						react: PasswordResetOTPEmail({
@@ -194,7 +193,7 @@ export const auth = betterAuth({
 			sendInvitationEmail: async (data) => {
 				const invitationUrl = `${env.CORS_ORIGIN}/accept-invitation?invitationId=${data.id}`;
 				await resend.emails.send({
-					from: "BetterAuth <onboarding@resend.dev>",
+					from: EMAIL_FROM,
 					to: data.email,
 					subject: `${data.inviter.user.name} has invited you to join ${data.organization.name}`,
 					react: OrganizationInviteEmail({

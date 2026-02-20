@@ -39,8 +39,8 @@ import {
 
 const navigationLinks: { href: string; label: string; isExternal: boolean }[] =
 	[
-		// { href: "/", label: "Home", isExternal: false },
-		// { href: "/about", label: "About", isExternal: false }
+		{ href: "/", label: "Home", isExternal: false },
+		{ href: "/about", label: "About", isExternal: false },
 	];
 
 export default function Header() {
@@ -179,7 +179,10 @@ export default function Header() {
 									className="h-8 w-8 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 								>
 									<Avatar className="rounded-sm">
-										<AvatarImage src={session.user.image ?? undefined} />
+										<AvatarImage
+											src={session.user.image ?? undefined}
+											alt={session.user.name ?? "User avatar"}
+										/>
 										<AvatarFallback>
 											{session.user.name?.charAt(0)}
 										</AvatarFallback>
@@ -195,7 +198,10 @@ export default function Header() {
 								<DropdownMenuLabel className="p-0 font-normal">
 									<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
 										<Avatar>
-											<AvatarImage src={session.user.image ?? undefined} />
+											<AvatarImage
+												src={session.user.image ?? undefined}
+												alt={session.user.name ?? "User avatar"}
+											/>
 											<AvatarFallback>
 												{session.user.name?.charAt(0)}
 											</AvatarFallback>

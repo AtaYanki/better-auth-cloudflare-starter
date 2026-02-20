@@ -8,6 +8,7 @@ import { trpcServer } from "@hono/trpc-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { secureHeaders } from "hono/secure-headers";
 import { rateLimiter } from "hono-rate-limiter";
 import { authMiddleware } from "./middleware/auth";
 import { servicesMiddleware } from "./middleware/services";
@@ -27,9 +28,12 @@ export type HonoEnv = {
 const app = new Hono<HonoEnv>();
 
 app.use("*", servicesMiddleware);
+app.use("*", secureHeaders());
 app.use("*", authMiddleware);
 
-app.use(logger());
+if (env.NODE_ENV === "development") {
+	app.use(logger());
+}
 app.use(
 	"/*",
 	cors({

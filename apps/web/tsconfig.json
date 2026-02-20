@@ -1,4 +1,5 @@
 {
+	"extends": "../../packages/config/tsconfig.base.json",
 	"include": ["**/*.ts", "**/*.tsx"],
 	"compilerOptions": {
 		"target": "ES2022",
@@ -15,10 +16,6 @@
 
 		/* Linting */
 		"skipLibCheck": true,
-		"strict": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"noFallthroughCasesInSwitch": true,
 		"noUncheckedSideEffectImports": true,
 		"baseUrl": ".",
 		"paths": {

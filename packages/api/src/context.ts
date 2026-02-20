@@ -1,36 +1,25 @@
-import { auth } from "@better-auth-cloudflare-starter/auth";
+import type { auth } from "@better-auth-cloudflare-starter/auth";
 import type { Context as HonoContext } from "hono";
 import type { Services } from "./services";
+
+type SessionResult = Awaited<ReturnType<typeof auth.api.getSession>>;
+type CustomerStateResult = Awaited<ReturnType<typeof auth.api.state>>;
 
 export type CreateContextOptions = {
 	context: HonoContext<{
 		Bindings: CloudflareBindings;
-		Variables: { services: Services };
+		Variables: {
+			services: Services;
+			session?: SessionResult;
+			customerState?: CustomerStateResult;
+		};
 	}>;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
-	// Gracefully handle auth failures for public procedures
-	let session = null;
-	let customerState = null;
-
-	try {
-		session = await auth.api.getSession({
-			headers: context.req.raw.headers,
-		});
-	} catch (_error) {
-		// Session fetch failed - this is expected for unauthenticated requests
-		// Continue with null session
-	}
-
-	try {
-		customerState = await auth.api.state({
-			headers: context.req.raw.headers,
-		});
-	} catch (_error) {
-		// Customer state fetch failed - this is expected for unauthenticated requests
-		// Continue with null customerState
-	}
+export function createContext({ context }: CreateContextOptions) {
+	// Reuse session and customerState from Hono auth middleware to avoid redundant fetches
+	const session = context.get("session") ?? null;
+	const customerState = context.get("customerState") ?? null;
 
 	return {
 		session,
@@ -40,4 +29,4 @@ export async function createContext({ context }: CreateContextOptions) {
 	};
 }
 
-export type Context = Awaited<ReturnType<typeof createContext>>;
+export type Context = ReturnType<typeof createContext>;

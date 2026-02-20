@@ -139,6 +139,10 @@ export function SignIn() {
 						<Pressable
 							className="absolute right-3"
 							onPress={() => setShowPassword(!showPassword)}
+							accessibilityLabel={
+								showPassword ? "Hide password" : "Show password"
+							}
+							accessibilityRole="button"
 						>
 							<Ionicons
 								name={showPassword ? "eye-off-outline" : "eye-outline"}

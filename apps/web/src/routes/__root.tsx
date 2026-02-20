@@ -1,19 +1,36 @@
 import type { AppRouter } from "@better-auth-cloudflare-starter/api/routers/index";
 import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
 	createRootRouteWithContext,
 	HeadContent,
 	Outlet,
 	Scripts,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
+import { lazy } from "react";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/sonner";
 import Footer from "../components/footer";
 import Header from "../components/header";
 import appCss from "../index.css?url";
+
+const TanStackRouterDevtools =
+	process.env.NODE_ENV === "production"
+		? () => null
+		: lazy(() =>
+				import("@tanstack/react-router-devtools").then((res) => ({
+					default: res.TanStackRouterDevtools,
+				})),
+			);
+
+const ReactQueryDevtools =
+	process.env.NODE_ENV === "production"
+		? () => null
+		: lazy(() =>
+				import("@tanstack/react-query-devtools").then((res) => ({
+					default: res.ReactQueryDevtools,
+				})),
+			);
 
 export interface RouterAppContext {
 	trpc: TRPCOptionsProxy<AppRouter>;

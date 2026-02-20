@@ -26,6 +26,16 @@ import {
 import * as React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -95,6 +105,7 @@ export const Route = createFileRoute("/__authenticated/dashboard")({
 function RouteComponent() {
 	const { users } = Route.useRouteContext();
 	const queryClient = useQueryClient();
+	const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
 
 	// Calculate user statistics
 	const userStats = React.useMemo(() => {
@@ -161,224 +172,241 @@ function RouteComponent() {
 		},
 	});
 
-	const handleBanUser = (userId: string) => {
-		banMutation.mutate({ data: { userId, banReason: "Banned by admin" } });
-	};
+	const handleBanUser = React.useCallback(
+		(userId: string) => {
+			banMutation.mutate({ data: { userId, banReason: "Banned by admin" } });
+		},
+		[banMutation],
+	);
 
-	const handleUnbanUser = (userId: string) => {
-		unbanMutation.mutate({ data: { userId } });
-	};
+	const handleUnbanUser = React.useCallback(
+		(userId: string) => {
+			unbanMutation.mutate({ data: { userId } });
+		},
+		[unbanMutation],
+	);
 
-	const handleDeleteUser = (userId: string) => {
-		if (
-			confirm(
-				"Are you sure you want to delete this user? This action cannot be undone.",
-			)
-		) {
-			deleteMutation.mutate({ data: { userId } });
+	const handleDeleteUser = React.useCallback((userId: string) => {
+		setDeleteUserId(userId);
+	}, []);
+
+	const confirmDeleteUser = React.useCallback(() => {
+		if (deleteUserId) {
+			deleteMutation.mutate({ data: { userId: deleteUserId } });
+			setDeleteUserId(null);
 		}
-	};
+	}, [deleteUserId, deleteMutation]);
 
-	const handleChangeRole = (userId: string, role: string) => {
-		changeRoleMutation.mutate({
-			data: { userId, role: role as "user" | "admin" },
-		});
-	};
+	const handleChangeRole = React.useCallback(
+		(userId: string, role: string) => {
+			changeRoleMutation.mutate({
+				data: { userId, role: role as "user" | "admin" },
+			});
+		},
+		[changeRoleMutation],
+	);
 
-	const columns: ColumnDef<User>[] = [
-		{
-			accessorKey: "name",
-			header: ({ column }) => (
-				<Button
-					variant="ghost"
-					onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-					className="h-auto p-0 font-semibold"
-				>
-					User
-					<ArrowUpDown className="ml-2 h-4 w-4" />
-				</Button>
-			),
-			cell: ({ row }) => {
-				const user = row.original;
-				return (
-					<div className="flex items-center gap-3">
-						<Avatar className="h-8 w-8">
-							<AvatarImage src={user.image} alt={user.name} />
-							<AvatarFallback>
-								{user.name
-									.split(" ")
-									.map((n: string) => n[0])
-									.join("")
-									.toUpperCase()}
-							</AvatarFallback>
-						</Avatar>
-						<div>
-							<div className="font-medium">{user.name}</div>
-							<div className="text-muted-foreground text-sm">{user.email}</div>
+	const columns: ColumnDef<User>[] = React.useMemo(
+		() => [
+			{
+				accessorKey: "name",
+				header: ({ column }) => (
+					<Button
+						variant="ghost"
+						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+						className="h-auto p-0 font-semibold"
+					>
+						User
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				),
+				cell: ({ row }) => {
+					const user = row.original;
+					return (
+						<div className="flex items-center gap-3">
+							<Avatar className="h-8 w-8">
+								<AvatarImage src={user.image} alt={user.name} />
+								<AvatarFallback>
+									{user.name
+										.split(" ")
+										.map((n: string) => n[0])
+										.join("")
+										.toUpperCase()}
+								</AvatarFallback>
+							</Avatar>
+							<div>
+								<div className="font-medium">{user.name}</div>
+								<div className="text-muted-foreground text-sm">
+									{user.email}
+								</div>
+							</div>
 						</div>
-					</div>
-				);
+					);
+				},
 			},
-		},
-		{
-			accessorKey: "role",
-			header: ({ column }) => (
-				<Button
-					variant="ghost"
-					onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-					className="h-auto p-0 font-semibold"
-				>
-					Role
-					<ArrowUpDown className="ml-2 h-4 w-4" />
-				</Button>
-			),
-			cell: ({ row }) => {
-				const role = row.getValue("role") as string;
-				if (!role) return <Badge variant="secondary">User</Badge>;
+			{
+				accessorKey: "role",
+				header: ({ column }) => (
+					<Button
+						variant="ghost"
+						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+						className="h-auto p-0 font-semibold"
+					>
+						Role
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				),
+				cell: ({ row }) => {
+					const role = row.getValue("role") as string;
+					if (!role) return <Badge variant="secondary">User</Badge>;
 
-				const roleConfig = {
-					admin: { variant: "default" as const, icon: Crown },
-					moderator: { variant: "secondary" as const, icon: Shield },
-					user: { variant: "outline" as const, icon: UserCheck },
-				};
+					const roleConfig = {
+						admin: { variant: "default" as const, icon: Crown },
+						moderator: { variant: "secondary" as const, icon: Shield },
+						user: { variant: "outline" as const, icon: UserCheck },
+					};
 
-				const config =
-					roleConfig[role as keyof typeof roleConfig] || roleConfig.user;
-				const Icon = config.icon;
+					const config =
+						roleConfig[role as keyof typeof roleConfig] || roleConfig.user;
+					const Icon = config.icon;
 
-				return (
-					<Badge variant={config.variant} className="capitalize">
-						<Icon className="mr-1 h-3 w-3" />
-						{role}
-					</Badge>
-				);
+					return (
+						<Badge variant={config.variant} className="capitalize">
+							<Icon className="mr-1 h-3 w-3" />
+							{role}
+						</Badge>
+					);
+				},
 			},
-		},
-		{
-			accessorKey: "banned",
-			header: "Status",
-			cell: ({ row }) => {
-				const banned = row.getValue("banned") as boolean;
-				return banned ? (
-					<Badge variant="destructive">
-						<ShieldOff className="mr-1 h-3 w-3" />
-						Banned
-					</Badge>
-				) : (
-					<Badge variant="outline">
-						<Shield className="mr-1 h-3 w-3" />
-						Active
-					</Badge>
-				);
+			{
+				accessorKey: "banned",
+				header: "Status",
+				cell: ({ row }) => {
+					const banned = row.getValue("banned") as boolean;
+					return banned ? (
+						<Badge variant="destructive">
+							<ShieldOff className="mr-1 h-3 w-3" />
+							Banned
+						</Badge>
+					) : (
+						<Badge variant="outline">
+							<Shield className="mr-1 h-3 w-3" />
+							Active
+						</Badge>
+					);
+				},
 			},
-		},
-		{
-			accessorKey: "emailVerified",
-			header: "Verified",
-			cell: ({ row }) => {
-				const verified = row.getValue("emailVerified") as boolean;
-				return verified ? (
-					<Badge variant="default">
-						<UserCheck className="mr-1 h-3 w-3" />
-						Yes
-					</Badge>
-				) : (
-					<Badge variant="outline">
-						<UserX className="mr-1 h-3 w-3" />
-						No
-					</Badge>
-				);
+			{
+				accessorKey: "emailVerified",
+				header: "Verified",
+				cell: ({ row }) => {
+					const verified = row.getValue("emailVerified") as boolean;
+					return verified ? (
+						<Badge variant="default">
+							<UserCheck className="mr-1 h-3 w-3" />
+							Yes
+						</Badge>
+					) : (
+						<Badge variant="outline">
+							<UserX className="mr-1 h-3 w-3" />
+							No
+						</Badge>
+					);
+				},
 			},
-		},
-		{
-			accessorKey: "createdAt",
-			header: ({ column }) => (
-				<Button
-					variant="ghost"
-					onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-					className="h-auto p-0 font-semibold"
-				>
-					Created
-					<ArrowUpDown className="ml-2 h-4 w-4" />
-				</Button>
-			),
-			cell: ({ row }) => {
-				const date = row.getValue("createdAt") as Date;
-				return <div className="text-sm">{format(date, "MMM dd, yyyy")}</div>;
+			{
+				accessorKey: "createdAt",
+				header: ({ column }) => (
+					<Button
+						variant="ghost"
+						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+						className="h-auto p-0 font-semibold"
+					>
+						Created
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				),
+				cell: ({ row }) => {
+					const date = row.getValue("createdAt") as Date;
+					return <div className="text-sm">{format(date, "MMM dd, yyyy")}</div>;
+				},
 			},
-		},
-		{
-			id: "actions",
-			enableHiding: false,
-			cell: ({ row }) => {
-				const user = row.original;
+			{
+				id: "actions",
+				enableHiding: false,
+				cell: ({ row }) => {
+					const user = row.original;
 
-				return (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" className="h-8 w-8 p-0">
-								<span className="sr-only">Open menu</span>
-								<MoreHorizontal className="h-4 w-4" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuLabel>Actions</DropdownMenuLabel>
-							<DropdownMenuItem
-								onClick={() => navigator.clipboard.writeText(user.id)}
-							>
-								Copy user ID
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-
-							<DropdownMenuLabel>Role</DropdownMenuLabel>
-							<DropdownMenuRadioGroup
-								value={user.role || "user"}
-								onValueChange={(value) => handleChangeRole(user.id, value)}
-							>
-								<DropdownMenuRadioItem value="user">User</DropdownMenuRadioItem>
-								<DropdownMenuRadioItem value="moderator">
-									Moderator
-								</DropdownMenuRadioItem>
-								<DropdownMenuRadioItem value="admin">
-									Admin
-								</DropdownMenuRadioItem>
-							</DropdownMenuRadioGroup>
-
-							<DropdownMenuSeparator />
-
-							{user.banned ? (
+					return (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="ghost" className="h-8 w-8 p-0">
+									<span className="sr-only">Open menu</span>
+									<MoreHorizontal className="h-4 w-4" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuLabel>Actions</DropdownMenuLabel>
 								<DropdownMenuItem
-									onClick={() => handleUnbanUser(user.id)}
-									className="text-green-600"
+									onClick={() => navigator.clipboard.writeText(user.id)}
 								>
-									<Shield className="mr-2 h-4 w-4" />
-									Unban User
+									Copy user ID
 								</DropdownMenuItem>
-							) : (
+								<DropdownMenuSeparator />
+
+								<DropdownMenuLabel>Role</DropdownMenuLabel>
+								<DropdownMenuRadioGroup
+									value={user.role || "user"}
+									onValueChange={(value) => handleChangeRole(user.id, value)}
+								>
+									<DropdownMenuRadioItem value="user">
+										User
+									</DropdownMenuRadioItem>
+									<DropdownMenuRadioItem value="moderator">
+										Moderator
+									</DropdownMenuRadioItem>
+									<DropdownMenuRadioItem value="admin">
+										Admin
+									</DropdownMenuRadioItem>
+								</DropdownMenuRadioGroup>
+
+								<DropdownMenuSeparator />
+
+								{user.banned ? (
+									<DropdownMenuItem
+										onClick={() => handleUnbanUser(user.id)}
+										className="text-green-600"
+									>
+										<Shield className="mr-2 h-4 w-4" />
+										Unban User
+									</DropdownMenuItem>
+								) : (
+									<DropdownMenuItem
+										onClick={() => handleBanUser(user.id)}
+										className="text-orange-600"
+									>
+										<ShieldOff className="mr-2 h-4 w-4" />
+										Ban User
+									</DropdownMenuItem>
+								)}
+
+								<DropdownMenuSeparator />
+
 								<DropdownMenuItem
-									onClick={() => handleBanUser(user.id)}
-									className="text-orange-600"
+									onClick={() => handleDeleteUser(user.id)}
+									className="text-red-600"
 								>
-									<ShieldOff className="mr-2 h-4 w-4" />
-									Ban User
+									<Trash2 className="mr-2 h-4 w-4" />
+									Delete User
 								</DropdownMenuItem>
-							)}
-
-							<DropdownMenuSeparator />
-
-							<DropdownMenuItem
-								onClick={() => handleDeleteUser(user.id)}
-								className="text-red-600"
-							>
-								<Trash2 className="mr-2 h-4 w-4" />
-								Delete User
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				);
+							</DropdownMenuContent>
+						</DropdownMenu>
+					);
+				},
 			},
-		},
-	];
+		],
+		[handleBanUser, handleUnbanUser, handleDeleteUser, handleChangeRole],
+	);
 
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -519,6 +547,27 @@ function RouteComponent() {
 					</TableBody>
 				</Table>
 			</div>
+
+			<AlertDialog
+				open={!!deleteUserId}
+				onOpenChange={(open) => !open && setDeleteUserId(null)}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete user</AlertDialogTitle>
+						<AlertDialogDescription>
+							Are you sure you want to delete this user? This action cannot be
+							undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction onClick={confirmDeleteUser}>
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

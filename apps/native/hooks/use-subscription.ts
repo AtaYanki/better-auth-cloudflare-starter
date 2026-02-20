@@ -39,9 +39,7 @@ export function useCheckout() {
 			return { success: false, cancelled: browserResult.type === "cancel" };
 		} catch (error: unknown) {
 			const message =
-				error instanceof Error
-					? error.message
-					: "Failed to start checkout";
+				error instanceof Error ? error.message : "Failed to start checkout";
 			Alert.alert("Checkout Error", message);
 			return { success: false, error: message };
 		}

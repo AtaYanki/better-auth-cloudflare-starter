@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
-import { POLAR_PRODUCTS } from "@better-auth-cloudflare-starter/auth/lib/polar-products";
 import { polarClient } from "@better-auth-cloudflare-starter/auth/lib/payments";
+import { POLAR_PRODUCTS } from "@better-auth-cloudflare-starter/auth/lib/polar-products";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "../index";
@@ -60,9 +60,7 @@ export const subscriptionRouter = router({
 				};
 			} catch (error) {
 				if (error instanceof Error) {
-					console.error(
-						`Polar checkout creation failed: ${error.message}`,
-					);
+					console.error(`Polar checkout creation failed: ${error.message}`);
 				}
 				throw new TRPCError({
 					code: "INTERNAL_SERVER_ERROR",

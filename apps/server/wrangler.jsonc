@@ -45,9 +45,9 @@
     "production": {
       "vars": {
         "NODE_ENV": "production",
-        "CORS_ORIGIN": "https://test.getomnipost.com",
-        "BETTER_AUTH_URL": "https://api-better-auth.getomnipost.com",
-        "POLAR_SUCCESS_URL": "https://test.getomnipost.com/success"
+        "CORS_ORIGIN": "https://your-frontend-domain.com",
+        "BETTER_AUTH_URL": "https://your-api-domain.com",
+        "POLAR_SUCCESS_URL": "https://your-frontend-domain.com/success"
       },
       "ratelimits": [
         {

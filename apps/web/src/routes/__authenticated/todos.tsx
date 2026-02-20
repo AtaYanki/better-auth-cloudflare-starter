@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -27,6 +27,7 @@ const FREE_TIER_LIMIT = 10;
 
 function TodosPage() {
 	const trpc = useTRPC();
+	const queryClient = useQueryClient();
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
 	const { data: session } = authClient.useSession();
@@ -40,14 +41,18 @@ function TodosPage() {
 	const todos = useQuery(trpc.todo.list.queryOptions());
 	const stats = useQuery(trpc.todo.stats.queryOptions());
 
+	const invalidateTodos = () => {
+		queryClient.invalidateQueries({ queryKey: trpc.todo.list.queryKey() });
+		queryClient.invalidateQueries({ queryKey: trpc.todo.stats.queryKey() });
+	};
+
 	const createTodo = useMutation(
 		trpc.todo.create.mutationOptions({
 			onSuccess: () => {
 				toast.success("Todo created!");
 				setTitle("");
 				setDescription("");
-				todos.refetch();
-				stats.refetch();
+				invalidateTodos();
 			},
 			onError: (error) => {
 				toast.error(error.message);
@@ -58,8 +63,7 @@ function TodosPage() {
 	const toggleTodo = useMutation(
 		trpc.todo.toggleComplete.mutationOptions({
 			onSuccess: () => {
-				todos.refetch();
-				stats.refetch();
+				invalidateTodos();
 			},
 		}),
 	);
@@ -68,8 +72,7 @@ function TodosPage() {
 		trpc.todo.delete.mutationOptions({
 			onSuccess: () => {
 				toast.success("Todo deleted!");
-				todos.refetch();
-				stats.refetch();
+				invalidateTodos();
 			},
 		}),
 	);
@@ -220,9 +223,11 @@ function TodosPage() {
 						<CardContent className="p-4">
 							<div className="flex items-start gap-3">
 								<Checkbox
+									id={`todo-${todo.id}`}
 									checked={todo.completed}
 									onCheckedChange={() => toggleTodo.mutate({ id: todo.id })}
 									disabled={toggleTodo.isPending}
+									aria-label={`Mark "${todo.title}" as ${todo.completed ? "incomplete" : "complete"}`}
 									className="mt-1"
 								/>
 								<div className="min-w-0 flex-1">
@@ -248,6 +253,7 @@ function TodosPage() {
 									onClick={() => deleteTodo.mutate({ id: todo.id })}
 									disabled={deleteTodo.isPending}
 									className="shrink-0"
+									aria-label={`Delete "${todo.title}"`}
 								>
 									<Trash2 className="h-4 w-4" />
 								</Button>
