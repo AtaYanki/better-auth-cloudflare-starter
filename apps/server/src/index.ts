@@ -109,4 +109,15 @@ app.get("/", (c) => {
 	return c.text("OK");
 });
 
+app.onError((error, c) => {
+	console.error("Unhandled error:", error);
+	if (env.NODE_ENV === "development") {
+		return c.json(
+			{ error: error.message, stack: error.stack },
+			500,
+		);
+	}
+	return c.json({ error: "Internal server error" }, 500);
+});
+
 export default app;

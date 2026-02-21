@@ -22,6 +22,7 @@ function signUpHandler({
 	setError,
 	setIsLoading,
 	setName,
+	setEmail,
 	setPassword,
 	setFieldErrors,
 }: {
@@ -80,6 +81,7 @@ function signUpHandler({
 			},
 			onSuccess() {
 				setName("");
+				setEmail("");
 				setPassword("");
 				queryClient.invalidateQueries();
 				// Redirect to verify OTP page with email

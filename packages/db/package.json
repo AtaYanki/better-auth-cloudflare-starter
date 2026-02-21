@@ -22,13 +22,13 @@
 		"db:migrate": "drizzle-kit migrate"
 	},
 	"devDependencies": {
-		"drizzle-kit": "^0.31.8",
+		"drizzle-kit": "catalog:",
 		"@types/ws": "^8.18.1",
 		"typescript": "catalog:",
 		"@better-auth-cloudflare-starter/config": "workspace:*"
 	},
 	"dependencies": {
-		"drizzle-orm": "^0.45.1",
+		"drizzle-orm": "catalog:",
 		"@neondatabase/serverless": "^1.0.2",
 		"ws": "^8.19.0",
 		"dotenv": "catalog:",

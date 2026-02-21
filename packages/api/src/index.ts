@@ -1,7 +1,30 @@
+import { env } from "cloudflare:workers";
 import { initTRPC, TRPCError } from "@trpc/server";
 import type { Context } from "./context";
 
-export const t = initTRPC.context<Context>().create();
+const isProduction = env.NODE_ENV !== "development";
+
+export const t = initTRPC.context<Context>().create({
+	errorFormatter({ shape, error }) {
+		if (isProduction && error.code === "INTERNAL_SERVER_ERROR") {
+			return {
+				...shape,
+				message: "Internal server error",
+				data: {
+					...shape.data,
+					stack: undefined,
+				},
+			};
+		}
+		return {
+			...shape,
+			data: {
+				...shape.data,
+				stack: isProduction ? undefined : shape.data.stack,
+			},
+		};
+	},
+});
 
 export const router = t.router;
 

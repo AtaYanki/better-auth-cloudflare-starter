@@ -11,18 +11,10 @@ import type { HonoEnv } from "..";
 
 const F = createFactory<HonoEnv>();
 
-let cachedRepositories: Repositories | undefined;
-let cachedServices: Services | undefined;
+const repositories = createRepositories();
+const services = createServices(repositories);
 
 export const servicesMiddleware = F.createMiddleware(async (c, next) => {
-	if (!cachedRepositories) {
-		cachedRepositories = createRepositories();
-	}
-
-	if (!cachedServices) {
-		cachedServices = createServices(cachedRepositories);
-	}
-
-	c.set("services", cachedServices);
+	c.set("services", services);
 	return next();
 });

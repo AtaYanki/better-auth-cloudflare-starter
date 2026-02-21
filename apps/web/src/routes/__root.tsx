@@ -2,6 +2,7 @@ import type { AppRouter } from "@better-auth-cloudflare-starter/api/routers/inde
 import type { QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
+	ErrorComponent,
 	HeadContent,
 	Outlet,
 	Scripts,
@@ -38,6 +39,27 @@ export interface RouterAppContext {
 }
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
+	errorComponent: ({ error }) => {
+		return (
+			<div className="flex min-h-svh items-center justify-center p-8">
+				<div className="max-w-md text-center">
+					<h1 className="mb-4 font-bold text-2xl">Something went wrong</h1>
+					<p className="mb-6 text-muted-foreground">
+						{error instanceof Error
+							? error.message
+							: "An unexpected error occurred"}
+					</p>
+					<button
+						type="button"
+						onClick={() => window.location.reload()}
+						className="rounded-md bg-primary px-4 py-2 text-primary-foreground"
+					>
+						Reload Page
+					</button>
+				</div>
+			</div>
+		);
+	},
 	head: () => ({
 		meta: [
 			{

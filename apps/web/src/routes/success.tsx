@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, CreditCard, Home } from "lucide-react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -10,11 +11,13 @@ import {
 } from "@/components/ui/card";
 import { authClient } from "@/lib/auth-client";
 
+const successSearchSchema = z.object({
+	checkout_id: z.string().optional().default(""),
+});
+
 export const Route = createFileRoute("/success")({
 	component: SuccessPage,
-	validateSearch: (search) => ({
-		checkout_id: search.checkout_id as string,
-	}),
+	validateSearch: (search) => successSearchSchema.parse(search),
 });
 
 function SuccessPage() {

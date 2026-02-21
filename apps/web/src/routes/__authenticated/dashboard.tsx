@@ -82,11 +82,7 @@ type User = {
 
 export const Route = createFileRoute("/__authenticated/dashboard")({
 	component: RouteComponent,
-	beforeLoad: async () => {
-		const users = await getUserList();
-		return { users };
-	},
-	loader: async ({ context }) => {
+	beforeLoad: async ({ context }) => {
 		if (!context.session) {
 			throw redirect({
 				to: "/auth/$path",
@@ -99,6 +95,9 @@ export const Route = createFileRoute("/__authenticated/dashboard")({
 				to: "/",
 			});
 		}
+
+		const users = await getUserList();
+		return { users };
 	},
 });
 
