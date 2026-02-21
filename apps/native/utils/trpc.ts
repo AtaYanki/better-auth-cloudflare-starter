@@ -4,7 +4,13 @@ import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { authClient } from "@/lib/auth-client";
 
-export const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			staleTime: 60 * 1000,
+		},
+	},
+});
 
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [

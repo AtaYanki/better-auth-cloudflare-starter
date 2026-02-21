@@ -53,7 +53,7 @@ export function VerifyOTP() {
 			});
 
 			setSuccess(true);
-			queryClient.refetchQueries();
+			queryClient.invalidateQueries();
 
 			// Redirect to tabs after a short delay
 			setTimeout(() => {

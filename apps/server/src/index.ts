@@ -27,7 +27,25 @@ export type HonoEnv = {
 const app = new Hono<HonoEnv>();
 
 app.use("*", servicesMiddleware);
-app.use("*", secureHeaders());
+app.use(
+	"*",
+	secureHeaders({
+		contentSecurityPolicy: {
+			defaultSrc: ["'self'"],
+			scriptSrc: ["'self'"],
+			styleSrc: ["'self'", "'unsafe-inline'"],
+			imgSrc: ["'self'", "data:", "blob:", env.BUCKET_URL].filter(
+				Boolean,
+			) as string[],
+			connectSrc: ["'self'", env.CORS_ORIGIN].filter(Boolean) as string[],
+			fontSrc: ["'self'"],
+			objectSrc: ["'none'"],
+			frameSrc: ["'none'"],
+			baseUri: ["'self'"],
+			formAction: ["'self'"],
+		},
+	}),
+);
 app.use("*", authMiddleware);
 
 if (env.NODE_ENV === "development") {

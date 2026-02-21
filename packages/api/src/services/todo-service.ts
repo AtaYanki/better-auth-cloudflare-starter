@@ -35,7 +35,7 @@ export class TodoService {
 	private async getUserTier(context: Context): Promise<"free" | "pro"> {
 		const customerState = context.customerState;
 		if (
-			customerState?.activeSubscriptions.some(
+			(customerState?.activeSubscriptions ?? []).some(
 				(subscription) => subscription.productId === POLAR_PRODUCTS.pro.id,
 			)
 		) {
