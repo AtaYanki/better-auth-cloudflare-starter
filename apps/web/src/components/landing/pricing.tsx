@@ -55,9 +55,9 @@ export function Pricing() {
 						</p>
 					</div>
 					<div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-2">
-						{plans.map((plan, index) => (
+						{plans.map((plan) => (
 							<Card
-								key={index.toString()}
+								key={plan.name}
 								className={`relative border-border/50 bg-card/50 backdrop-blur-sm ${
 									plan.highlight ? "scale-105 border-primary shadow-lg" : ""
 								}`}

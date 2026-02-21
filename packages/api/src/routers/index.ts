@@ -45,9 +45,10 @@ export const appRouter = router({
 				});
 			}
 
+			const sanitizedName = `${ctx.session.user.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 			const data = await ctx.services.buckets.put(
 				file,
-				file.name,
+				sanitizedName,
 				"PUBLIC_BUCKET",
 				{
 					httpMetadata: {
@@ -62,11 +63,17 @@ export const appRouter = router({
 	deleteFile: protectedProcedure
 		.input(
 			z.object({
-				key: z.string(),
+				key: z.string().min(1),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
 			const { key } = input;
+			if (!key.startsWith(`${ctx.session.user.id}/`)) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "You can only delete your own files",
+				});
+			}
 			await ctx.services.buckets.delete(key, "PUBLIC_BUCKET");
 			return {
 				message: "File deleted successfully",

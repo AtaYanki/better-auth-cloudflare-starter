@@ -19,9 +19,9 @@ import {
 } from "better-auth/plugins";
 import { Resend } from "resend";
 import { polarClient } from "./lib/payments";
-import { getPolarProducts } from "./lib/polar-products";
+import { POLAR_PRODUCTS } from "./lib/polar-products";
 
-const resend = new Resend(process.env.RESEND_API_KEY || env.RESEND_API_KEY);
+const resend = new Resend(env.RESEND_API_KEY || process.env.RESEND_API_KEY);
 const EMAIL_FROM = "BetterAuth <onboarding@resend.dev>";
 
 export const auth = betterAuth({
@@ -93,28 +93,29 @@ export const auth = betterAuth({
 			});
 		},
 	},
-	// uncomment cookieCache setting when ready to deploy to Cloudflare using *.workers.dev domains
-	// session: {
-	//   cookieCache: {
-	//     enabled: true,
-	//     maxAge: 60,
-	//   },
-	// },
-	secret: process.env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET,
-	baseURL: process.env.BETTER_AUTH_URL || env.BETTER_AUTH_URL,
+	...(env.NODE_ENV !== "development"
+		? {
+				session: {
+					cookieCache: {
+						enabled: true,
+						maxAge: 60,
+					},
+				},
+			}
+		: {}),
+	secret: env.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET,
+	baseURL: env.BETTER_AUTH_URL || process.env.BETTER_AUTH_URL,
 	advanced: {
-		// defaultCookieAttributes: {
-		//   sameSite: "none",
-		//   secure: true,
-		//   httpOnly: true,
-		//   partitioned: true,
-		// },
-		// uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain
-		// https://developers.cloudflare.com/workers/wrangler/configuration/#workersdev
-		// crossSubDomainCookies: {
-		//   enabled: true,
-		//   domain: "<your-workers-subdomain>",
-		// },
+		...(env.NODE_ENV !== "development"
+			? {
+					defaultCookieAttributes: {
+						sameSite: "none" as const,
+						secure: true,
+						httpOnly: true,
+						partitioned: true,
+					},
+				}
+			: {}),
 	},
 	plugins: [
 		admin(),
@@ -172,11 +173,11 @@ export const auth = betterAuth({
 			createCustomerOnSignUp: true,
 			enableCustomerPortal: true,
 			use: [
-				checkout({
+		checkout({
 					products: [
 						{
-							productId: getPolarProducts().pro.id,
-							slug: getPolarProducts().pro.slug,
+							productId: POLAR_PRODUCTS.pro.id,
+							slug: POLAR_PRODUCTS.pro.slug,
 						},
 					],
 					successUrl: `${env.POLAR_SUCCESS_URL}?checkout_id={checkout_id}`,

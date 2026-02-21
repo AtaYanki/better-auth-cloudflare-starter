@@ -48,7 +48,10 @@ export default function Layout() {
 				parsed.hostname === "checkout-success" ||
 				parsed.path === "checkout-success"
 			) {
-				queryClient.invalidateQueries();
+				const checkoutId = parsed.queryParams?.checkout_id;
+				if (typeof checkoutId === "string" && checkoutId.length > 0) {
+					queryClient.invalidateQueries();
+				}
 			}
 		}
 	}, [url]);

@@ -26,8 +26,8 @@ export const authMiddleware = F.createMiddleware(async (c, next) => {
 		} else {
 			c.set("customerState", undefined);
 		}
-	} catch (_error) {
-		// If auth check fails, user is not authenticated
+	} catch (error) {
+		console.error("Auth middleware error:", error);
 		c.set("session", undefined);
 		c.set("customerState", undefined);
 	}

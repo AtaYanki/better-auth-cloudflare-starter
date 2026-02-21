@@ -17,6 +17,6 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true,
-		"types": ["node", "../../apps/server/worker-configuration.d.ts"]
+		"types": ["node"]
 	}
 }

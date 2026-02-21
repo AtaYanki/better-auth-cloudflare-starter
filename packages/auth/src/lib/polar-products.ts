@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import { PRODUCTS } from "@better-auth-cloudflare-starter/config/products";
 
 export type ProductSlug = "pro";
@@ -10,7 +11,9 @@ export interface PolarProduct {
 }
 
 export function getPolarProducts(): Record<ProductSlug, PolarProduct> {
-	const productId = process.env.POLAR_PRO_PRODUCT_ID;
+	const productId =
+		process.env.POLAR_PRO_PRODUCT_ID ||
+		(env as unknown as Record<string, string>).POLAR_PRO_PRODUCT_ID;
 	if (!productId) {
 		throw new Error(
 			"POLAR_PRO_PRODUCT_ID environment variable is required. Set it in your .env file.",

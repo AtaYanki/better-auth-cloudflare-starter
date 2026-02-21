@@ -86,7 +86,7 @@ export function SignIn() {
 				onSuccess() {
 					setEmail("");
 					setPassword("");
-					queryClient.refetchQueries();
+					queryClient.invalidateQueries();
 				},
 				onFinished() {
 					setIsLoading(false);

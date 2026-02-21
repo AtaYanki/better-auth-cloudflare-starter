@@ -108,9 +108,9 @@ export default function Header() {
 						>
 							<NavigationMenu className="max-w-none *:w-full">
 								<NavigationMenuList className="flex-col items-start gap-0 md:gap-2">
-									{navigationLinks.map((link, index) => (
+									{navigationLinks.map((link) => (
 										<NavigationMenuItem
-											key={index.toString()}
+											key={link.href}
 											className="w-full"
 										>
 											<NavigationMenuLink
@@ -147,8 +147,8 @@ export default function Header() {
 						{/* Navigation menu */}
 						<NavigationMenu className="max-md:hidden">
 							<NavigationMenuList className="gap-2">
-								{navigationLinks.map((link, index) => (
-									<NavigationMenuItem key={index.toString()}>
+								{navigationLinks.map((link) => (
+									<NavigationMenuItem key={link.href}>
 										<NavigationMenuLink
 											active={location.pathname === link.href}
 											href={link.href}

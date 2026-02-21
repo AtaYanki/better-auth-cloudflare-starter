@@ -114,18 +114,27 @@ function RouteComponent() {
 		const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 		const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-		return {
+		const stats = {
 			total: userList.length,
-			active: userList.filter((u) => !u.banned).length,
-			banned: userList.filter((u) => u.banned).length,
-			verified: userList.filter((u) => u.emailVerified).length,
-			unverified: userList.filter((u) => !u.emailVerified).length,
-			recent7Days: userList.filter((u) => new Date(u.createdAt) >= sevenDaysAgo)
-				.length,
-			recent30Days: userList.filter(
-				(u) => new Date(u.createdAt) >= thirtyDaysAgo,
-			).length,
+			active: 0,
+			banned: 0,
+			verified: 0,
+			unverified: 0,
+			recent7Days: 0,
+			recent30Days: 0,
 		};
+
+		for (const u of userList) {
+			if (u.banned) stats.banned++;
+			else stats.active++;
+			if (u.emailVerified) stats.verified++;
+			else stats.unverified++;
+			const createdAt = new Date(u.createdAt);
+			if (createdAt >= sevenDaysAgo) stats.recent7Days++;
+			if (createdAt >= thirtyDaysAgo) stats.recent30Days++;
+		}
+
+		return stats;
 	}, [users]);
 
 	const banMutation = useMutation({

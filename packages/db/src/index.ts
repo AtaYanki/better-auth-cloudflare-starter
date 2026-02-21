@@ -5,9 +5,9 @@ import * as schema from "./schema";
 
 neonConfig.poolQueryViaFetch = true;
 
-// Initialize database connection - use a placeholder during deployment validation
-const databaseUrl =
-	env.DATABASE_URL ||
-	"postgresql://placeholder:placeholder@localhost:5432/placeholder";
+const databaseUrl = env.DATABASE_URL;
+if (!databaseUrl) {
+	throw new Error("DATABASE_URL environment variable is required");
+}
 const sql = neon(databaseUrl);
 export const db = drizzle(sql, { schema });

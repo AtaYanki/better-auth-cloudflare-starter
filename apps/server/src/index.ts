@@ -3,7 +3,6 @@ import { createContext } from "@better-auth-cloudflare-starter/api/context";
 import { appRouter } from "@better-auth-cloudflare-starter/api/routers/index";
 import type { Services } from "@better-auth-cloudflare-starter/api/services";
 import { auth } from "@better-auth-cloudflare-starter/auth";
-import { POLAR_PRODUCTS } from "@better-auth-cloudflare-starter/auth/lib/polar-products";
 import { trpcServer } from "@hono/trpc-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -37,7 +36,7 @@ if (env.NODE_ENV === "development") {
 app.use(
 	"/*",
 	cors({
-		origin: env.CORS_ORIGIN || "",
+		origin: env.CORS_ORIGIN,
 		allowMethods: ["GET", "POST", "OPTIONS"],
 		allowHeaders: ["Content-Type", "Authorization"],
 		credentials: true,
@@ -48,6 +47,9 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 app.get("/api/payments/native-success", (c) => {
 	const checkoutId = c.req.query("checkout_id") || "";
+	if (!/^[a-zA-Z0-9_-]{0,200}$/.test(checkoutId)) {
+		return c.text("Invalid checkout ID", 400);
+	}
 	const appScheme = "better-auth-cloudflare-starter";
 	const deepLink = `${appScheme}://checkout-success?checkout_id=${encodeURIComponent(checkoutId)}`;
 
@@ -72,18 +74,8 @@ app.use(
 	rateLimiter<HonoEnv>({
 		binding: (c) => {
 			const session = c.get("session");
-			const customerState = c.get("customerState");
-
 			const isAuthenticated = !!session?.user;
-			const isPaidUser =
-				customerState?.activeSubscriptions?.some(
-					(subscription) => subscription.productId === POLAR_PRODUCTS.pro.id,
-				) ?? false;
 
-			// Use different rate limiters based on authentication and subscription status
-			if (isPaidUser && c.env.AUTHENTICATED_RATE_LIMITER) {
-				return c.env.AUTHENTICATED_RATE_LIMITER;
-			}
 			if (isAuthenticated && c.env.AUTHENTICATED_RATE_LIMITER) {
 				return c.env.AUTHENTICATED_RATE_LIMITER;
 			}

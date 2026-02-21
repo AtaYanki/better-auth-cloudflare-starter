@@ -1,14 +1,27 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
+import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import { authMiddleware } from "@/middleware/auth";
 
+const userIdSchema = z.object({
+	userId: z.string().min(1),
+});
+
+const banUserSchema = z.object({
+	userId: z.string().min(1),
+	banReason: z.string().max(500).optional(),
+	banExpiresIn: z.number().positive().optional(),
+});
+
+const changeRoleSchema = z.object({
+	userId: z.string().min(1),
+	role: z.enum(["user", "admin"]),
+});
+
 export const banUser = createServerFn()
 	.middleware([authMiddleware])
-	.inputValidator(
-		(data: { userId: string; banReason?: string; banExpiresIn?: number }) =>
-			data,
-	)
+	.inputValidator((data: unknown) => banUserSchema.parse(data))
 	.handler(async ({ data }) => {
 		const result = await authClient.admin.banUser({
 			userId: data.userId,
@@ -23,7 +36,7 @@ export const banUser = createServerFn()
 
 export const unbanUser = createServerFn()
 	.middleware([authMiddleware])
-	.inputValidator((data: { userId: string }) => data)
+	.inputValidator((data: unknown) => userIdSchema.parse(data))
 	.handler(async ({ data }) => {
 		const result = await authClient.admin.unbanUser({
 			userId: data.userId,
@@ -36,7 +49,7 @@ export const unbanUser = createServerFn()
 
 export const deleteUser = createServerFn()
 	.middleware([authMiddleware])
-	.inputValidator((data: { userId: string }) => data)
+	.inputValidator((data: unknown) => userIdSchema.parse(data))
 	.handler(async ({ data }) => {
 		const result = await authClient.admin.removeUser({
 			userId: data.userId,
@@ -49,7 +62,7 @@ export const deleteUser = createServerFn()
 
 export const changeUserRole = createServerFn({ method: "POST" })
 	.middleware([authMiddleware])
-	.inputValidator((data: { userId: string; role: "user" | "admin" }) => data)
+	.inputValidator((data: unknown) => changeRoleSchema.parse(data))
 	.handler(async ({ data }) => {
 		const result = await authClient.admin.setRole({
 			userId: data.userId,

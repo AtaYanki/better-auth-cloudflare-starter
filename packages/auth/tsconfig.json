@@ -6,6 +6,7 @@
 		"sourceMap": true,
 		"outDir": "dist",
 		"composite": true,
+		"types": ["node", "../../apps/server/worker-configuration.d.ts"],
 		"jsx": "react-jsx"
 	}
 }

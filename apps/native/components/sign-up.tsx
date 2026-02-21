@@ -81,7 +81,7 @@ function signUpHandler({
 			onSuccess() {
 				setName("");
 				setPassword("");
-				queryClient.refetchQueries();
+				queryClient.invalidateQueries();
 				// Redirect to verify OTP page with email
 				router.push({
 					pathname: "/verify-otp",

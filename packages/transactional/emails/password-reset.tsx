@@ -115,14 +115,14 @@ const PasswordResetEmail = (props: PasswordResetEmailProps) => {
 							<Text className="m-0 text-[12px] text-gray-500 leading-[16px]">
 								© 2025 Your Company. All rights reserved. |
 								<a
-									href="support@example.com"
+									href="mailto:support@example.com"
 									className="ml-[4px] text-blue-600 no-underline"
 								>
 									Contact Support
 								</a>{" "}
 								|
 								<a
-									href="support@example.com"
+									href="mailto:support@example.com"
 									className="ml-[4px] text-blue-600 no-underline"
 								>
 									Unsubscribe
