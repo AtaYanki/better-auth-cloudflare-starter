@@ -14,9 +14,8 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { useCheckoutEmbed, useCustomerState } from "@/hooks/use-polar";
+import { useCheckoutEmbed, useSubscriptionStatus } from "@/hooks/use-polar";
 import { authClient } from "@/lib/auth-client";
-import { isProduct, POLAR_PRODUCTS } from "@/lib/polar-products";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/__authenticated/todos")({
@@ -31,12 +30,12 @@ function TodosPage() {
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
 	const { data: session } = authClient.useSession();
-	const { data: customerState } = useCustomerState({ enabled: !!session });
+	const { data: subscriptionStatus } = useSubscriptionStatus({
+		enabled: !!session,
+	});
 	const checkoutEmbed = useCheckoutEmbed();
 
-	const hasPro = customerState?.activeSubscriptions?.some((sub) =>
-		isProduct(sub.productId, "pro"),
-	);
+	const hasPro = subscriptionStatus?.isProActive ?? false;
 
 	const todos = useQuery(trpc.todo.list.queryOptions());
 	const stats = useQuery(trpc.todo.stats.queryOptions());
@@ -140,12 +139,7 @@ function TodosPage() {
 					{isAtLimit && (
 						<CardContent>
 							<Button
-								onClick={() =>
-									checkoutEmbed.mutate({
-										productId: POLAR_PRODUCTS.pro.id,
-										slug: POLAR_PRODUCTS.pro.slug,
-									})
-								}
+								onClick={() => checkoutEmbed.mutate({ slug: "pro" })}
 								size="sm"
 							>
 								Upgrade to Pro

@@ -1,10 +1,12 @@
+import { PRODUCTS } from "@better-auth-cloudflare-starter/config/products";
+
 export type ProductSlug = "pro";
 
 export interface PolarProduct {
 	id: string;
 	slug: ProductSlug;
 	name: string;
-	description?: string;
+	description: string;
 }
 
 export function getPolarProducts(): Record<ProductSlug, PolarProduct> {
@@ -15,12 +17,7 @@ export function getPolarProducts(): Record<ProductSlug, PolarProduct> {
 		);
 	}
 	return {
-		pro: {
-			id: productId,
-			slug: "pro",
-			name: "Pro",
-			description: "Everything you need to ship faster with advanced features",
-		},
+		pro: { ...PRODUCTS.pro, id: productId },
 	} as const;
 }
 
@@ -31,7 +28,7 @@ export function getProductBySlug(slug: ProductSlug): PolarProduct {
 }
 
 export function getProductById(id: string): PolarProduct | undefined {
-	return Object.values(POLAR_PRODUCTS).find((product) => product.id === id);
+	return Object.values(POLAR_PRODUCTS).find((p) => p.id === id);
 }
 
 export function isProduct(productId: string, slug: ProductSlug): boolean {

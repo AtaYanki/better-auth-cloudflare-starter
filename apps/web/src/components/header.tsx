@@ -22,10 +22,9 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { useCheckoutEmbed, useCustomerState } from "@/hooks/use-polar";
+import { useCheckoutEmbed, useSubscriptionStatus } from "@/hooks/use-polar";
 import { useScrollPosition } from "@/hooks/use-scroll-position";
 import { authClient } from "@/lib/auth-client";
-import { isProduct, POLAR_PRODUCTS } from "@/lib/polar-products";
 import { cn } from "@/lib/utils";
 import {
 	DropdownMenu,
@@ -49,14 +48,11 @@ export default function Header() {
 	const checkoutEmbed = useCheckoutEmbed();
 	const { isScrolled } = useScrollPosition();
 	const { data: session } = authClient.useSession();
-	const { data: customerState } = useCustomerState({ enabled: !!session });
+	const { data: subscriptionStatus } = useSubscriptionStatus({
+		enabled: !!session,
+	});
 
-	// Check if user has active Pro subscription
-	const hasPro = customerState
-		? customerState.activeSubscriptions?.some((sub) =>
-				isProduct(sub.productId, "pro"),
-			)
-		: false;
+	const hasPro = subscriptionStatus?.isProActive ?? false;
 
 	return (
 		<header
@@ -228,12 +224,7 @@ export default function Header() {
 									)}
 									{!hasPro && (
 										<DropdownMenuItem
-											onClick={() =>
-												checkoutEmbed.mutate({
-													productId: POLAR_PRODUCTS.pro.id,
-													slug: POLAR_PRODUCTS.pro.slug,
-												})
-											}
+											onClick={() => checkoutEmbed.mutate({ slug: "pro" })}
 										>
 											<Sparkles />
 											Upgrade to Pro

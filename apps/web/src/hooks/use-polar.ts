@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
+import { useTRPC } from "@/utils/trpc";
 
 /**
  * Query hook to fetch customer state from Polar
@@ -37,11 +38,25 @@ export function useOrders() {
 }
 
 /**
+ * Query hook to fetch subscription status (pro check resolved server-side)
+ */
+export function useSubscriptionStatus({
+	enabled = true,
+}: {
+	enabled?: boolean;
+}) {
+	const trpc = useTRPC();
+	return useQuery(
+		trpc.subscription.getStatus.queryOptions(undefined, { enabled }),
+	);
+}
+
+/**
  * Mutation hook to open Polar checkout embed
  */
 export function useCheckoutEmbed() {
 	return useMutation({
-		mutationFn: async (params: { productId: string; slug: string }) => {
+		mutationFn: async (params: { slug: string }) => {
 			return authClient.checkoutEmbed(params);
 		},
 	});

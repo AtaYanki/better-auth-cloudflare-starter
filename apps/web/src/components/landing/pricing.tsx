@@ -9,7 +9,6 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { useCheckoutEmbed } from "@/hooks/use-polar";
-import { POLAR_PRODUCTS } from "@/lib/polar-products";
 
 export function Pricing() {
 	const router = useRouter();
@@ -38,11 +37,7 @@ export function Pricing() {
 			description:
 				"Everything you need to ship faster with advanced features. Cancel anytime.",
 			cta: "Upgrade to Pro",
-			ctaAction: () =>
-				checkoutEmbed.mutate({
-					productId: POLAR_PRODUCTS.pro.id,
-					slug: POLAR_PRODUCTS.pro.slug,
-				}),
+			ctaAction: () => checkoutEmbed.mutate({ slug: "pro" }),
 			highlight: true,
 		},
 	];
