@@ -27,7 +27,7 @@
 		"typescript": "catalog:",
 		"tsdown": "^0.20.3",
 		"@better-auth-cloudflare-starter/config": "workspace:*",
-		"wrangler": "^4.63.0",
+		"wrangler": "catalog:",
 		"@types/node": "catalog:"
 	}
 }
