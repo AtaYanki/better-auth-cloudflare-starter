@@ -2,6 +2,7 @@ import { copyFile, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { Glob } from "bun";
+import { removePolar } from "./remove-polar";
 
 const ROOT = join(import.meta.dirname, "..");
 
@@ -148,6 +149,23 @@ async function main() {
 		console.log("  renamed: apps/native/app.json (expo config)");
 	} catch {
 		console.warn("  warning: could not update apps/native/app.json");
+	}
+
+	// --- Optional Polar payment integration ---
+	{
+		const rl2 = createInterface({
+			input: process.stdin,
+			output: process.stdout,
+		});
+		const polarAnswer = (
+			await rl2.question("  Include Polar payment integration? (Y/n): ")
+		).trim();
+		rl2.close();
+
+		if (polarAnswer.toLowerCase() === "n") {
+			await removePolar(ROOT);
+			console.log("  Polar payment integration removed.\n");
+		}
 	}
 
 	// --- Create .env files from .env.example ---
