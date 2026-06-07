@@ -42,7 +42,8 @@
 		"db:generate": "turbo -F @better-auth-cloudflare-starter/db db:generate",
 		"db:migrate": "turbo -F @better-auth-cloudflare-starter/db db:migrate",
 		"check": "biome check --write .",
-		"init": "bun scripts/init.ts"
+		"init": "bun scripts/init.ts",
+		"add:polar": "bun scripts/add-polar.ts"
 	},
 	"dependencies": {
 		"@biomejs/biome": "^2.3.14",

@@ -4,7 +4,6 @@ import { join } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { Glob } from "bun";
 import { removeNative } from "./remove-native";
-import { removePolar } from "./remove-polar";
 
 const ROOT = join(import.meta.dirname, "..");
 
@@ -32,13 +31,11 @@ function parseArgs(): {
 	name?: string;
 	bundleId?: string;
 	keepNative?: boolean;
-	polar?: boolean;
 } {
 	const args = process.argv.slice(2);
 	let name: string | undefined;
 	let bundleId: string | undefined;
 	let keepNative: boolean | undefined;
-	let polar: boolean | undefined;
 
 	for (let i = 0; i < args.length; i++) {
 		if (args[i] === "--name" && args[i + 1]) {
@@ -49,14 +46,10 @@ function parseArgs(): {
 			i++;
 		} else if (args[i] === "--keep-native") {
 			keepNative = true;
-		} else if (args[i] === "--polar") {
-			polar = true;
-		} else if (args[i] === "--no-polar") {
-			polar = false;
 		}
 	}
 
-	return { name, bundleId, keepNative, polar };
+	return { name, bundleId, keepNative };
 }
 
 async function main() {
@@ -182,27 +175,6 @@ async function main() {
 		}
 	}
 
-	// --- Optional Polar payment integration ---
-	{
-		let includePolar = cliArgs.polar;
-		if (includePolar === undefined) {
-			const rl2 = createInterface({
-				input: process.stdin,
-				output: process.stdout,
-			});
-			const polarAnswer = (
-				await rl2.question("  Include Polar payment integration? (Y/n): ")
-			).trim();
-			rl2.close();
-			includePolar = polarAnswer.toLowerCase() !== "n";
-		}
-
-		if (!includePolar) {
-			await removePolar(ROOT);
-			console.log("  Polar payment integration removed.\n");
-		}
-	}
-
 	// --- Optional mobile app removal ---
 	if (!keepNative) {
 		await removeNative(ROOT);
@@ -276,6 +248,9 @@ async function main() {
 
 	console.log(
 		`\n  Done! Initialized "${name}" (${changedCount} files renamed, .env files created).\n`,
+	);
+	console.log(
+		"  Want payments? Add the Polar integration: bun run add:polar\n",
 	);
 }
 
