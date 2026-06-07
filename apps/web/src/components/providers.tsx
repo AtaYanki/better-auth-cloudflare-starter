@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import { SyncProvider } from "@/lib/sync";
 import { useTRPC } from "@/utils/trpc";
 import { ThemeProvider } from "./theme-provider";
 
@@ -73,7 +74,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 					invalidate();
 				}}
 			>
-				{children}
+				<SyncProvider>{children}</SyncProvider>
 			</AuthUIProviderTanstack>
 		</ThemeProvider>
 	);

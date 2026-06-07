@@ -21,6 +21,7 @@
 		"dotenv": "catalog:",
 		"zod": "catalog:",
 		"@better-auth-cloudflare-starter/db": "workspace:*",
+		"@better-auth-cloudflare-starter/sync": "workspace:*",
 		"@better-auth-cloudflare-starter/transactional": "workspace:*",
 		"resend": "catalog:"
 	}

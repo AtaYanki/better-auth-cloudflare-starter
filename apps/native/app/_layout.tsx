@@ -10,6 +10,7 @@ import {
 	KeyboardProvider,
 } from "react-native-keyboard-controller";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
+import { SyncEngine } from "@/lib/sync";
 import { queryClient } from "@/utils/trpc";
 
 export const unstable_settings = {
@@ -72,6 +73,7 @@ export default function Layout() {
 
 	return (
 		<QueryClientProvider client={queryClient}>
+			<SyncEngine />
 			<GestureHandlerRootView style={{ flex: 1 }}>
 				<KeyboardProvider>
 					<AppThemeProvider>

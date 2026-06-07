@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { db } from "@better-auth-cloudflare-starter/db";
 import * as schema from "@better-auth-cloudflare-starter/db/schema/auth";
+import { orgChannel } from "@better-auth-cloudflare-starter/sync";
 import {
 	OrganizationInviteEmail,
 	OTPVerificationEmail,
@@ -191,6 +192,20 @@ export const auth = betterAuth({
 				enabled: true,
 			},
 			requireEmailVerificationOnInvitation: true,
+			organizationHooks: {
+				// Close the removed member's live sync sockets for this org.
+				// Best-effort: reconnects re-run channel authorization anyway,
+				// so a failed kick only delays the disconnect.
+				afterRemoveMember: async ({ member }) => {
+					try {
+						await env.SYNC_CHANNEL.getByName(
+							orgChannel(member.organizationId),
+						).kick(member.userId, "membership-revoked");
+					} catch (error) {
+						console.error("[sync] failed to kick removed member", error);
+					}
+				},
+			},
 			sendInvitationEmail: async (data) => {
 				const invitationUrl = `${env.CORS_ORIGIN}/accept-invitation?invitationId=${data.id}`;
 				await resend.emails.send({

@@ -11,6 +11,10 @@ import { secureHeaders } from "hono/secure-headers";
 import { rateLimiter } from "hono-rate-limiter";
 import { authMiddleware } from "./middleware/auth";
 import { servicesMiddleware } from "./middleware/services";
+import { syncUpgradeHandler } from "./routes/sync";
+
+// Durable Object classes must be exported from the Worker entry module.
+export { SyncChannelDO } from "@better-auth-cloudflare-starter/sync/do";
 
 export type AuthVariables = {
 	session?: Awaited<ReturnType<typeof auth.api.getSession>>;
@@ -87,6 +91,10 @@ app.get("/api/payments/native-success", (c) => {
 </body>
 </html>`);
 });
+
+// Registered BEFORE the rate limiter: reconnect bursts (e.g. after a deploy)
+// must not burn users' rate budget. Authorization happens inside the handler.
+app.get("/sync/:channel", ...syncUpgradeHandler);
 
 app.use(
 	rateLimiter<HonoEnv>({

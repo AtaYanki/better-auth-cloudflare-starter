@@ -1,0 +1,39 @@
+{
+	"name": "@better-auth-cloudflare-starter/sync",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./do": {
+			"default": "./src/do/index.ts"
+		},
+		"./server": {
+			"default": "./src/server/index.ts"
+		},
+		"./client": {
+			"default": "./src/client/index.ts"
+		},
+		"./react": {
+			"default": "./src/react/index.ts"
+		}
+	},
+	"peerDependencies": {
+		"react": "*",
+		"@tanstack/react-query": "catalog:"
+	},
+	"peerDependenciesMeta": {
+		"react": {
+			"optional": true
+		},
+		"@tanstack/react-query": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"typescript": "catalog:",
+		"@better-auth-cloudflare-starter/config": "workspace:*",
+		"@types/react": "^19",
+		"@tanstack/react-query": "catalog:"
+	}
+}

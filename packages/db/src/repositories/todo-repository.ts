@@ -1,13 +1,25 @@
+import {
+	type Channel,
+	userChannel,
+} from "@better-auth-cloudflare-starter/sync";
 import { and, count, desc, eq } from "drizzle-orm";
 import { db } from "../index";
 import { type NewTodo, type Todo, todo } from "../schema/todo";
+import { SyncedRepository } from "./synced-repository";
 
-export class TodoRepository {
+export class TodoRepository extends SyncedRepository<Todo> {
+	protected readonly entity = "todo";
+
+	protected channelsFor(row: Todo): Channel[] {
+		return [userChannel(row.userId)];
+	}
+
 	async create(data: NewTodo): Promise<Todo> {
 		const [newTodo] = await db.insert(todo).values(data).returning();
 		if (!newTodo) {
 			throw new Error("Failed to create todo");
 		}
+		this.emitSync("create", newTodo);
 		return newTodo;
 	}
 
@@ -54,15 +66,21 @@ export class TodoRepository {
 			.set({ ...data, updatedAt: new Date() })
 			.where(and(eq(todo.id, id), eq(todo.userId, userId)))
 			.returning();
+		if (updatedTodo) {
+			this.emitSync("update", updatedTodo);
+		}
 		return updatedTodo || null;
 	}
 
 	async delete(id: string, userId: string): Promise<boolean> {
-		const result = await db
+		const [deletedTodo] = await db
 			.delete(todo)
 			.where(and(eq(todo.id, id), eq(todo.userId, userId)))
 			.returning();
-		return result.length > 0;
+		if (deletedTodo) {
+			this.emitSync("delete", deletedTodo);
+		}
+		return Boolean(deletedTodo);
 	}
 
 	async toggleComplete(id: string, userId: string): Promise<Todo | null> {

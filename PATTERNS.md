@@ -8,7 +8,8 @@ This document explains the architectural patterns used in this starter template 
 2. [Service Layer Pattern](#service-layer-pattern)
 3. [Service Locator Pattern](#service-locator-pattern)
 4. [Bucket Service](#bucket-service)
-5. [Creating New Features](#creating-new-features)
+5. [Sync Engine](#sync-engine)
+6. [Creating New Features](#creating-new-features)
 
 ---
 
@@ -584,6 +585,89 @@ export const appRouter = router({
 ### Step 9: Create Frontend Route (Optional)
 
 Create `apps/web/src/routes/__authenticated/examples.tsx` and use tRPC hooks.
+
+---
+
+## Sync Engine
+
+The **Sync Engine** (`packages/sync`) provides real-time cross-device/cross-tab synchronization over WebSockets to a Durable Object, plus presence and ephemeral broadcast on the same infrastructure.
+
+### How it works
+
+```
+DB write (SyncedRepository) ──publish──▶ SyncChannelDO (one per channel)
+                                              │ broadcast {entity, op, id}
+        TanStack Query invalidate ◀──WS──── all connected clients
+                                              │ refetch via tRPC (full auth)
+```
+
+- **Events are invalidation-only** — `{entity, op, id}` metadata, never row data. Clients refetch through `protectedProcedure`s, so authorization is always enforced by the normal API path.
+- **Channels** are broadcast domains: `user:{id}`, `org:{id}`, or any new type you define. One Durable Object instance per channel.
+- **Authorization is default-deny** at the worker edge (`apps/server/src/sync/authorizers.ts`): a channel type without a registered authorizer is unreachable. The DO trusts only worker-set identity headers.
+- **Presence** (who's connected) and **ephemeral broadcast** (typing indicators, cross-tab toasts) ride the same sockets — see `useSync()` in `apps/web/src/lib/sync.tsx`.
+
+### Adding sync to a new entity
+
+1. Extend `SyncedRepository` and call `emitSync` after writes:
+
+```typescript
+// packages/db/src/repositories/post-repository.ts
+import { type Channel, orgChannel } from "@better-auth-cloudflare-starter/sync";
+import { SyncedRepository } from "./synced-repository";
+
+export class PostRepository extends SyncedRepository<Post> {
+  protected readonly entity = "post";
+
+  protected channelsFor(row: Post): Channel[] {
+    return [orgChannel(row.organizationId)]; // who should hear about changes
+  }
+
+  async create(data: NewPost): Promise<Post> {
+    const [post] = await db.insert(posts).values(data).returning();
+    if (!post) throw new Error("Failed to create post");
+    this.emitSync("create", post); // after .returning() — row is committed
+    return post;
+  }
+}
+```
+
+2. Pass the publisher through `createRepositories` (already wired — just add your repo to the factory in `packages/db/src/repositories/index.ts`).
+
+3. Register the entity's query keys on the client (`apps/web/src/lib/sync.tsx`):
+
+```typescript
+registry.register("post", {
+  rootKeys: () => [trpc.post.pathKey()],          // reconnect catch-up
+  onEvent: () => [trpc.post.list.queryKey()],     // live invalidation
+});
+```
+
+That's the whole checklist. `emitSync` is best-effort by contract: it never throws and never delays the mutation.
+
+### Adding a new channel type
+
+Register an authorizer in `apps/server/src/sync/authorizers.ts` (everything else is generic):
+
+```typescript
+syncAuthorizers.register("doc", async ({ channelId, userId }) => {
+  return canUserAccessDoc(channelId, userId); // your rule
+});
+```
+
+Clients subscribe by adding the channel to the array passed to `useSyncEngine` — see `SyncProvider`.
+
+### Key files
+
+| Concern | File |
+|---|---|
+| Protocol & channel types | `packages/sync/src/protocol.ts`, `channels.ts` |
+| Durable Object (fan-out hub) | `packages/sync/src/do/sync-channel-do.ts` |
+| Repository base class | `packages/db/src/repositories/synced-repository.ts` |
+| Channel authorization | `apps/server/src/sync/authorizers.ts` |
+| WebSocket upgrade route | `apps/server/src/routes/sync.ts` |
+| Web client wiring | `apps/web/src/lib/sync.tsx` |
+| Native client wiring | `apps/native/lib/sync.tsx` |
+| Tests | `apps/server/src/__tests__/sync-*.test.ts` |
 
 ---
 

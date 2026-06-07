@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useCheckoutEmbed, useSubscriptionStatus } from "@/hooks/use-polar";
 import { authClient } from "@/lib/auth-client";
+import { useSync } from "@/lib/sync";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/__authenticated/todos")({
@@ -89,10 +90,24 @@ function TodosPage() {
 	const todoCount = stats.data?.total || 0;
 	const isAtLimit = !hasPro && todoCount >= FREE_TIER_LIMIT;
 
+	// Live connection count for this user across tabs/devices (sync engine presence).
+	const sync = useSync();
+	const ownConnections = sync.userChannel
+		? (sync.presence[sync.userChannel] ?? []).reduce(
+				(total, member) => total + member.connections,
+				0,
+			)
+		: 0;
+
 	return (
 		<div className="container mx-auto max-w-4xl px-4 py-8">
 			<div className="mb-8">
-				<h1 className="mb-2 font-bold text-3xl">My Todos</h1>
+				<div className="mb-2 flex items-center gap-3">
+					<h1 className="font-bold text-3xl">My Todos</h1>
+					{ownConnections > 1 && (
+						<Badge variant="secondary">Live on {ownConnections} devices</Badge>
+					)}
+				</div>
 				<p className="text-muted-foreground">
 					Manage your tasks and stay organized
 				</p>

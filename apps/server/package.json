@@ -7,6 +7,8 @@
 		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
 		"dev": "wrangler dev --port 3000",
 		"start": "wrangler dev",
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"deploy": "wrangler deploy --env production",
 		"cf-typegen": "wrangler types --env-interface CloudflareBindings"
 	},
@@ -14,6 +16,7 @@
 		"@better-auth-cloudflare-starter/api": "workspace:*",
 		"@better-auth-cloudflare-starter/auth": "workspace:*",
 		"@better-auth-cloudflare-starter/db": "workspace:*",
+		"@better-auth-cloudflare-starter/sync": "workspace:*",
 		"@hono/trpc-server": "^0.4.2",
 		"@trpc/server": "catalog:",
 		"better-auth": "catalog:",
@@ -23,9 +26,11 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"typescript": "catalog:",
 		"@better-auth-cloudflare-starter/config": "workspace:*",
-		"wrangler": "catalog:",
-		"@types/node": "catalog:"
+		"@cloudflare/vitest-pool-workers": "^0.8.0",
+		"@types/node": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "~3.2.0",
+		"wrangler": "catalog:"
 	}
 }

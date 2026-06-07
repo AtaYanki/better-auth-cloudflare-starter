@@ -28,6 +28,7 @@
 		"@better-auth-cloudflare-starter/config": "workspace:*"
 	},
 	"dependencies": {
+		"@better-auth-cloudflare-starter/sync": "workspace:*",
 		"drizzle-orm": "catalog:",
 		"@neondatabase/serverless": "^1.0.2",
 		"ws": "^8.19.0",

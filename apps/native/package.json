@@ -13,6 +13,7 @@
 	},
 	"dependencies": {
 		"@better-auth-cloudflare-starter/api": "workspace:*",
+		"@better-auth-cloudflare-starter/sync": "workspace:*",
 		"@better-auth/expo": "catalog:",
 		"@expo/metro-runtime": "~6.1.2",
 		"@expo/vector-icons": "^15.0.3",
