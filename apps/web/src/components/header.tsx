@@ -5,7 +5,6 @@ import {
 	LineChart,
 	LogOut,
 	Settings,
-	Sparkles,
 } from "lucide-react";
 import Logo from "@/components/logo";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -22,7 +21,6 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { useCheckoutEmbed, useSubscriptionStatus } from "@/hooks/use-polar";
 import { useScrollPosition } from "@/hooks/use-scroll-position";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
@@ -45,14 +43,9 @@ const navigationLinks: { href: string; label: string; isExternal: boolean }[] =
 export default function Header() {
 	const navigate = useNavigate();
 	const location = useLocation();
-	const checkoutEmbed = useCheckoutEmbed();
 	const { isScrolled } = useScrollPosition();
 	const { data: session } = authClient.useSession();
-	const { data: subscriptionStatus } = useSubscriptionStatus({
-		enabled: !!session,
-	});
 
-	const hasPro = subscriptionStatus?.isProActive ?? false;
 
 	return (
 		<header
@@ -218,14 +211,6 @@ export default function Header() {
 												Dashboard
 											</DropdownMenuItem>
 										</Link>
-									)}
-									{!hasPro && (
-										<DropdownMenuItem
-											onClick={() => checkoutEmbed.mutate({ slug: "pro" })}
-										>
-											<Sparkles />
-											Upgrade to Pro
-										</DropdownMenuItem>
 									)}
 									<Link to="/todos">
 										<DropdownMenuItem>

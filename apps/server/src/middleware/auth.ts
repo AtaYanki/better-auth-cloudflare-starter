@@ -17,19 +17,9 @@ export const authMiddleware = F.createMiddleware(async (c, next) => {
 
 		c.set("session", session);
 
-		// Get customer state if user is authenticated
-		if (session?.user) {
-			const customerState = await auth.api.state({
-				headers: c.req.raw.headers,
-			});
-			c.set("customerState", customerState);
-		} else {
-			c.set("customerState", undefined);
-		}
 	} catch (error) {
 		console.error("Auth middleware error:", error);
 		c.set("session", undefined);
-		c.set("customerState", undefined);
 	}
 
 	return next();

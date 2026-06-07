@@ -20,7 +20,7 @@ export const todoRouter = router({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			return ctx.services.todos.create(ctx.session.user.id, input, ctx);
+			return ctx.services.todos.create(ctx.session.user.id, input);
 		}),
 
 	update: protectedProcedure

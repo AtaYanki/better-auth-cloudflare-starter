@@ -3,7 +3,6 @@ import type { Context as HonoContext } from "hono";
 import type { Services } from "./services";
 
 type SessionResult = Awaited<ReturnType<typeof auth.api.getSession>>;
-type CustomerStateResult = Awaited<ReturnType<typeof auth.api.state>>;
 
 export type CreateContextOptions = {
 	context: HonoContext<{
@@ -11,19 +10,16 @@ export type CreateContextOptions = {
 		Variables: {
 			services: Services;
 			session?: SessionResult;
-			customerState?: CustomerStateResult;
 		};
 	}>;
 };
 
 export function createContext({ context }: CreateContextOptions) {
-	// Reuse session and customerState from Hono auth middleware to avoid redundant fetches
+	// Reuse session from Hono auth middleware to avoid redundant fetches
 	const session = context.get("session") ?? null;
-	const customerState = context.get("customerState") ?? null;
 
 	return {
 		session,
-		customerState,
 		context,
 		services: context.var.services,
 	};

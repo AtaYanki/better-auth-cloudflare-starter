@@ -1,56 +1,13 @@
-import { POLAR_PRODUCTS } from "@better-auth-cloudflare-starter/auth/lib/polar-products";
 import type { TodoRepository } from "@better-auth-cloudflare-starter/db/repositories";
 import { TRPCError } from "@trpc/server";
-import type { Context } from "../context";
-
-const TIER_LIMITS = {
-	free: {
-		maxTodos: 10,
-	},
-	pro: {
-		maxTodos: Number.POSITIVE_INFINITY,
-	},
-} as const;
 
 export class TodoService {
 	constructor(private readonly todoRepository: TodoRepository) {}
 
-	private async checkTodoLimit(
-		userId: string,
-		context: Context,
-	): Promise<void> {
-		const totalCount = await this.todoRepository.getTotalCount(userId);
-
-		const tier = await this.getUserTier(context);
-		const limit = TIER_LIMITS[tier].maxTodos;
-
-		if (totalCount >= limit) {
-			throw new TRPCError({
-				code: "FORBIDDEN",
-				message: `You've reached your ${tier} plan limit of ${limit} todos. Upgrade to Pro for unlimited todos.`,
-			});
-		}
-	}
-
-	private async getUserTier(context: Context): Promise<"free" | "pro"> {
-		const customerState = context.customerState;
-		if (
-			(customerState?.activeSubscriptions ?? []).some(
-				(subscription) => subscription.productId === POLAR_PRODUCTS.pro.id,
-			)
-		) {
-			return "pro";
-		}
-		return "free";
-	}
-
 	async create(
 		userId: string,
 		data: { title: string; description?: string },
-		context: Context,
 	) {
-		await this.checkTodoLimit(userId, context);
-
 		const newTodo = await this.todoRepository.create({
 			id: crypto.randomUUID(),
 			userId,

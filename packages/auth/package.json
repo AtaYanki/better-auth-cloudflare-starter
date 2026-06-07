@@ -16,8 +16,6 @@
 	},
 	"dependencies": {
 		"better-auth": "catalog:",
-		"@polar-sh/better-auth": "catalog:",
-		"@polar-sh/sdk": "catalog:",
 		"dotenv": "catalog:",
 		"zod": "catalog:",
 		"@better-auth-cloudflare-starter/db": "workspace:*",

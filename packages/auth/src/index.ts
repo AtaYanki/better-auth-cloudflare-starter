@@ -9,7 +9,6 @@ import {
 	PasswordResetOTPEmail,
 	SignInOTPEmail,
 } from "@better-auth-cloudflare-starter/transactional/emails";
-import { checkout, polar, portal } from "@polar-sh/better-auth";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import {
@@ -19,8 +18,6 @@ import {
 	organization,
 } from "better-auth/plugins";
 import { Resend } from "resend";
-import { polarClient } from "./lib/payments";
-import { POLAR_PRODUCTS } from "./lib/polar-products";
 
 const resend = new Resend(env.RESEND_API_KEY || process.env.RESEND_API_KEY);
 const EMAIL_FROM = "BetterAuth <onboarding@resend.dev>";
@@ -49,11 +46,6 @@ export const auth = betterAuth({
 		},
 		deleteUser: {
 			enabled: true,
-			afterDelete: async (user) => {
-				await polarClient.customers.deleteExternal({
-					externalId: user.id,
-				});
-			},
 		},
 	},
 	emailAndPassword: {
@@ -168,24 +160,6 @@ export const auth = betterAuth({
 					});
 				}
 			},
-		}),
-		polar({
-			client: polarClient,
-			createCustomerOnSignUp: true,
-			enableCustomerPortal: true,
-			use: [
-				checkout({
-					products: [
-						{
-							productId: POLAR_PRODUCTS.pro.id,
-							slug: POLAR_PRODUCTS.pro.slug,
-						},
-					],
-					successUrl: `${env.POLAR_SUCCESS_URL}?checkout_id={checkout_id}`,
-					authenticatedUsersOnly: true,
-				}),
-				portal(),
-			],
 		}),
 		organization({
 			teams: {

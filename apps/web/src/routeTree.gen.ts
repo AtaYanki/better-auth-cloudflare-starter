@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SuccessRouteImport } from './routes/success'
 import { Route as AcceptInvitationRouteImport } from './routes/accept-invitation'
 import { Route as _authenticatedRouteImport } from './routes/__authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,11 +19,6 @@ import { Route as _authenticatedDashboardRouteImport } from './routes/__authenti
 import { Route as _authenticatedOrganizationPathRouteImport } from './routes/__authenticated/organization/$path'
 import { Route as _authenticatedAccountPathRouteImport } from './routes/__authenticated/account/$path'
 
-const SuccessRoute = SuccessRouteImport.update({
-  id: '/success',
-  path: '/success',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AcceptInvitationRoute = AcceptInvitationRouteImport.update({
   id: '/accept-invitation',
   path: '/accept-invitation',
@@ -75,7 +69,6 @@ const _authenticatedAccountPathRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
-  '/success': typeof SuccessRoute
   '/dashboard': typeof _authenticatedDashboardRoute
   '/todos': typeof _authenticatedTodosRoute
   '/auth/$path': typeof AuthPathRoute
@@ -86,7 +79,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invitation': typeof AcceptInvitationRoute
-  '/success': typeof SuccessRoute
   '/dashboard': typeof _authenticatedDashboardRoute
   '/todos': typeof _authenticatedTodosRoute
   '/auth/$path': typeof AuthPathRoute
@@ -99,7 +91,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/__authenticated': typeof _authenticatedRouteWithChildren
   '/accept-invitation': typeof AcceptInvitationRoute
-  '/success': typeof SuccessRoute
   '/__authenticated/dashboard': typeof _authenticatedDashboardRoute
   '/__authenticated/todos': typeof _authenticatedTodosRoute
   '/auth/$path': typeof AuthPathRoute
@@ -112,7 +103,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept-invitation'
-    | '/success'
     | '/dashboard'
     | '/todos'
     | '/auth/$path'
@@ -123,7 +113,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accept-invitation'
-    | '/success'
     | '/dashboard'
     | '/todos'
     | '/auth/$path'
@@ -135,7 +124,6 @@ export interface FileRouteTypes {
     | '/'
     | '/__authenticated'
     | '/accept-invitation'
-    | '/success'
     | '/__authenticated/dashboard'
     | '/__authenticated/todos'
     | '/auth/$path'
@@ -148,20 +136,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   _authenticatedRoute: typeof _authenticatedRouteWithChildren
   AcceptInvitationRoute: typeof AcceptInvitationRoute
-  SuccessRoute: typeof SuccessRoute
   AuthPathRoute: typeof AuthPathRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/success': {
-      id: '/success'
-      path: '/success'
-      fullPath: '/success'
-      preLoaderRoute: typeof SuccessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/accept-invitation': {
       id: '/accept-invitation'
       path: '/accept-invitation'
@@ -250,7 +230,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   _authenticatedRoute: _authenticatedRouteWithChildren,
   AcceptInvitationRoute: AcceptInvitationRoute,
-  SuccessRoute: SuccessRoute,
   AuthPathRoute: AuthPathRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
 }

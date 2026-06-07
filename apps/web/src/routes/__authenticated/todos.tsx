@@ -14,8 +14,6 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { useCheckoutEmbed, useSubscriptionStatus } from "@/hooks/use-polar";
-import { authClient } from "@/lib/auth-client";
 import { useSync } from "@/lib/sync";
 import { useTRPC } from "@/utils/trpc";
 
@@ -23,21 +21,11 @@ export const Route = createFileRoute("/__authenticated/todos")({
 	component: TodosPage,
 });
 
-const FREE_TIER_LIMIT = 10;
-
 function TodosPage() {
 	const trpc = useTRPC();
 	const queryClient = useQueryClient();
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
-	const { data: session } = authClient.useSession();
-	const { data: subscriptionStatus } = useSubscriptionStatus({
-		enabled: !!session,
-	});
-	const checkoutEmbed = useCheckoutEmbed();
-
-	const hasPro = subscriptionStatus?.isProActive ?? false;
-
 	const todos = useQuery(trpc.todo.list.queryOptions());
 	const stats = useQuery(trpc.todo.stats.queryOptions());
 
@@ -87,8 +75,6 @@ function TodosPage() {
 		});
 	};
 
-	const todoCount = stats.data?.total || 0;
-	const isAtLimit = !hasPro && todoCount >= FREE_TIER_LIMIT;
 
 	// Live connection count for this user across tabs/devices (sync engine presence).
 	const sync = useSync();
@@ -137,41 +123,12 @@ function TodosPage() {
 				</div>
 			)}
 
-			{/* Tier Limit Warning */}
-			{!hasPro && (
-				<Card className="mb-6 border-amber-200 bg-amber-50 dark:bg-amber-950/20">
-					<CardHeader>
-						<CardTitle className="flex items-center gap-2 text-sm">
-							<Badge variant="outline">Free Plan</Badge>
-							{todoCount}/{FREE_TIER_LIMIT} todos used
-						</CardTitle>
-						<CardDescription>
-							{isAtLimit
-								? "You've reached your free plan limit. Upgrade to Pro for unlimited todos!"
-								: `You can create ${FREE_TIER_LIMIT - todoCount} more todos on the free plan.`}
-						</CardDescription>
-					</CardHeader>
-					{isAtLimit && (
-						<CardContent>
-							<Button
-								onClick={() => checkoutEmbed.mutate({ slug: "pro" })}
-								size="sm"
-							>
-								Upgrade to Pro
-							</Button>
-						</CardContent>
-					)}
-				</Card>
-			)}
-
 			{/* Create Todo Form */}
 			<Card className="mb-6">
 				<CardHeader>
 					<CardTitle>Add New Todo</CardTitle>
 					<CardDescription>
-						{hasPro
-							? "Create unlimited todos with Pro"
-							: `Free plan: ${FREE_TIER_LIMIT - todoCount} remaining`}
+						Create a new todo
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -180,19 +137,19 @@ function TodosPage() {
 							placeholder="Todo title..."
 							value={title}
 							onChange={(e) => setTitle(e.target.value)}
-							disabled={createTodo.isPending || isAtLimit}
+							disabled={createTodo.isPending}
 							maxLength={200}
 						/>
 						<Input
 							placeholder="Description (optional)..."
 							value={description}
 							onChange={(e) => setDescription(e.target.value)}
-							disabled={createTodo.isPending || isAtLimit}
+							disabled={createTodo.isPending}
 							maxLength={1000}
 						/>
 						<Button
 							type="submit"
-							disabled={createTodo.isPending || !title.trim() || isAtLimit}
+							disabled={createTodo.isPending || !title.trim()}
 						>
 							{createTodo.isPending ? (
 								<>

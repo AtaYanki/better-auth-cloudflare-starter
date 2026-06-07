@@ -2,7 +2,6 @@ import { env } from "cloudflare:workers";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../index";
-import { subscriptionRouter } from "./subscription";
 import { todoRouter } from "./todo";
 
 export const appRouter = router({
@@ -10,7 +9,6 @@ export const appRouter = router({
 		return "OK";
 	}),
 	todo: todoRouter,
-	subscription: subscriptionRouter,
 	uploadFile: protectedProcedure
 		.input(z.instanceof(FormData))
 		.mutation(async ({ ctx, input }) => {

@@ -1,4 +1,3 @@
-import { polarClient } from "@polar-sh/better-auth";
 import {
 	adminClient,
 	emailOTPClient,
@@ -11,7 +10,6 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
 export const authClient = createAuthClient({
 	baseURL: SERVER_URL,
 	plugins: [
-		polarClient(),
 		adminClient(),
 		emailOTPClient(),
 		organizationClient(),
