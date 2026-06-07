@@ -32,7 +32,7 @@ export function VerifyOTP() {
 	}, [countdown]);
 
 	async function handleVerify() {
-		if (!otp || otp.length !== 6) {
+		if (otp?.length !== 6) {
 			setFieldError("Please enter a valid 6-digit code");
 			return;
 		}

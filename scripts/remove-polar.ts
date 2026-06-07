@@ -302,6 +302,15 @@ export async function removePolar(root: string): Promise<void> {
 				/\tconst \{ data: subscriptionStatus \} = useSubscriptionStatus\(\{[\s\S]*?\}\);\n/,
 				"",
 			);
+			// Remove session + authClient import (only used by useSubscriptionStatus)
+			content = content.replace(
+				/\tconst \{ data: session \} = authClient\.useSession\(\);\n/,
+				"",
+			);
+			content = content.replace(
+				/import\s*\{\s*authClient\s*\}\s*from\s*"@\/lib\/auth-client";\n/,
+				"",
+			);
 			content = content.replace(
 				/\tconst checkoutEmbed = useCheckoutEmbed\(\);\n\n/,
 				"",

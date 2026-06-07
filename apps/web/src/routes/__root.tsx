@@ -2,7 +2,6 @@ import type { AppRouter } from "@better-auth-cloudflare-starter/api/routers/inde
 import type { QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
-	ErrorComponent,
 	HeadContent,
 	Outlet,
 	Scripts,

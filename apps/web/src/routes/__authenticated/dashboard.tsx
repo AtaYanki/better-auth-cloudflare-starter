@@ -10,7 +10,6 @@ import {
 	type SortingState,
 	useReactTable,
 } from "@tanstack/react-table";
-import { format } from "date-fns";
 import {
 	ArrowUpDown,
 	Crown,
@@ -336,7 +335,15 @@ function RouteComponent() {
 				),
 				cell: ({ row }) => {
 					const date = row.getValue("createdAt") as Date;
-					return <div className="text-sm">{format(date, "MMM dd, yyyy")}</div>;
+					return (
+						<div className="text-sm">
+							{date.toLocaleDateString("en-US", {
+								month: "short",
+								day: "2-digit",
+								year: "numeric",
+							})}
+						</div>
+					);
 				},
 			},
 			{

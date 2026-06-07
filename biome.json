@@ -20,6 +20,7 @@
 			"!**/.nuxt",
 			"!bts.jsonc",
 			"!**/.expo",
+			"!**/.claude",
 			"!**/.wrangler",
 			"!**/.alchemy",
 			"!**/.svelte-kit",

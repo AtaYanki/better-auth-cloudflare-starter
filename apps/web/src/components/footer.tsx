@@ -1,6 +1,5 @@
-import { siGithub, siX } from "simple-icons";
 import Logo from "@/components/logo";
-import S_Icon from "@/components/s-icon";
+import S_Icon, { siGithub, siX } from "@/components/s-icon";
 
 export default function Footer() {
 	return (
