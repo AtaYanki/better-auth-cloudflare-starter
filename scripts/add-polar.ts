@@ -82,8 +82,38 @@ function replaceOnce(
 	return content.replace(search, replacement);
 }
 
+/**
+ * Regex variant for anchors that biome may have reflowed (collapsed
+ * multi-line signatures, dropped blank lines). `alreadyApplied` is a probe
+ * string proving the edit exists so reruns stay idempotent.
+ */
+function replacePattern(
+	content: string,
+	alreadyApplied: string,
+	pattern: RegExp,
+	replacement: string,
+	manualHint: string,
+): string {
+	if (content.includes(alreadyApplied)) {
+		return content;
+	}
+	if (!pattern.test(content)) {
+		warnings.push(manualHint);
+		return content;
+	}
+	return content.replace(pattern, replacement);
+}
+
 export async function addPolar(root: string): Promise<void> {
 	console.log("\n  Adding Polar payment integration...\n");
+
+	// The mobile app is optional; skip all its files when it was removed.
+	let hasNative = true;
+	try {
+		await readFile(join(root, "apps/native/package.json"));
+	} catch {
+		hasNative = false;
+	}
 
 	// --- A. Copy Polar-only files from extras/polar ---
 	const filesToCopy = [
@@ -98,14 +128,9 @@ export async function addPolar(root: string): Promise<void> {
 	];
 
 	for (const file of filesToCopy) {
-		// The mobile app is optional; skip its files when it was removed.
-		if (file.startsWith("apps/native/")) {
-			try {
-				await readFile(join(root, "apps/native/package.json"));
-			} catch {
-				console.log(`  skipped: ${file} (no mobile app)`);
-				continue;
-			}
+		if (file.startsWith("apps/native/") && !hasNative) {
+			console.log(`  skipped: ${file} (no mobile app)`);
+			continue;
 		}
 		const source = join(root, "extras/polar", file);
 		const target = join(root, file);
@@ -245,10 +270,11 @@ export async function addPolar(root: string): Promise<void> {
 				'\n\tprivate async checkTodoLimit(\n\t\tuserId: string,\n\t\tcontext: Context,\n\t): Promise<void> {\n\t\tconst totalCount = await this.todoRepository.getTotalCount(userId);\n\n\t\tconst tier = await this.getUserTier(context);\n\t\tconst limit = TIER_LIMITS[tier].maxTodos;\n\n\t\tif (totalCount >= limit) {\n\t\t\tthrow new TRPCError({\n\t\t\t\tcode: "FORBIDDEN",\n\t\t\t\tmessage: `You\'ve reached your ${tier} plan limit of ${limit} todos. Upgrade to Pro for unlimited todos.`,\n\t\t\t});\n\t\t}\n\t}\n\n\tprivate async getUserTier(context: Context): Promise<"free" | "pro"> {\n\t\tconst customerState = context.customerState;\n\t\tif (\n\t\t\t(customerState?.activeSubscriptions ?? []).some(\n\t\t\t\t(subscription) => subscription.productId === POLAR_PRODUCTS.pro.id,\n\t\t\t)\n\t\t) {\n\t\t\treturn "pro";\n\t\t}\n\t\treturn "free";\n\t}\n',
 				"packages/api/src/services/todo-service.ts: add the private checkTodoLimit/getUserTier methods (see extras docs)",
 			);
-			content = replaceOnce(
+			content = replacePattern(
 				content,
-				"\tasync create(\n\t\tuserId: string,\n\t\tdata: { title: string; description?: string },\n\t) {\n\t\tconst newTodo",
-				"\tasync create(\n\t\tuserId: string,\n\t\tdata: { title: string; description?: string },\n\t\tcontext: Context,\n\t) {\n\t\tawait this.checkTodoLimit(userId, context);\n\n\t\tconst newTodo",
+				"await this.checkTodoLimit(userId, context);",
+				/async create\(\s*userId: string,\s*data: \{ title: string; description\?: string \},?\s*\) \{(\s*)(const newTodo)/,
+				"async create(\n\t\tuserId: string,\n\t\tdata: { title: string; description?: string },\n\t\tcontext: Context,\n\t) {\n\t\tawait this.checkTodoLimit(userId, context);\n$1$2",
 				"packages/api/src/services/todo-service.ts: add a `context: Context` param to create() and call `await this.checkTodoLimit(userId, context)` first",
 			);
 			return content;
@@ -288,10 +314,10 @@ export async function addPolar(root: string): Promise<void> {
 		join(root, "apps/server/src/middleware/auth.ts"),
 		(original) => {
 			let content = original;
-			content = replaceOnce(
+			content = insertAfter(
 				content,
-				'\t\tc.set("session", session);\n\n\t} catch (error) {',
-				'\t\tc.set("session", session);\n\n\t\t// Get customer state if user is authenticated\n\t\tif (session?.user) {\n\t\t\tconst customerState = await auth.api.state({\n\t\t\t\theaders: c.req.raw.headers,\n\t\t\t});\n\t\t\tc.set("customerState", customerState);\n\t\t} else {\n\t\t\tc.set("customerState", undefined);\n\t\t}\n\t} catch (error) {',
+				'\t\tc.set("session", session);\n',
+				'\n\t\t// Get customer state if user is authenticated\n\t\tif (session?.user) {\n\t\t\tconst customerState = await auth.api.state({\n\t\t\t\theaders: c.req.raw.headers,\n\t\t\t});\n\t\t\tc.set("customerState", customerState);\n\t\t} else {\n\t\t\tc.set("customerState", undefined);\n\t\t}\n',
 				'apps/server/src/middleware/auth.ts: after setting the session, fetch auth.api.state for authenticated users and c.set("customerState", ...)',
 			);
 			content = replaceOnce(
@@ -313,10 +339,11 @@ export async function addPolar(root: string): Promise<void> {
 			'import { polarClient } from "@polar-sh/better-auth";\n',
 			'apps/web/src/lib/auth-client.ts: import { polarClient } from "@polar-sh/better-auth"',
 		);
-		content = insertAfter(
+		content = replacePattern(
 			content,
-			"\tplugins: [\n",
-			"\t\tpolarClient(),\n",
+			"polarClient(),",
+			/plugins: \[\s*/,
+			"plugins: [\n\t\tpolarClient(),\n\t\t",
 			"apps/web/src/lib/auth-client.ts: add polarClient() to the auth client plugins array",
 		);
 		return content;
@@ -327,10 +354,11 @@ export async function addPolar(root: string): Promise<void> {
 		join(root, "apps/web/src/components/header.tsx"),
 		(original) => {
 			let content = original;
-			content = insertAfter(
+			content = replacePattern(
 				content,
-				"\tSettings,\n",
-				"\tSparkles,\n",
+				"Sparkles",
+				/import \{\s*([^}]*?),?\s*\} from "lucide-react";/,
+				'import { $1, Sparkles } from "lucide-react";',
 				"apps/web/src/components/header.tsx: add Sparkles to the lucide-react import",
 			);
 			content = insertBefore(
@@ -396,9 +424,10 @@ export async function addPolar(root: string): Promise<void> {
 				'\t\t\t{/* Tier Limit Warning */}\n\t\t\t{!hasPro && (\n\t\t\t\t<Card className="mb-6 border-amber-200 bg-amber-50 dark:bg-amber-950/20">\n\t\t\t\t\t<CardHeader>\n\t\t\t\t\t\t<CardTitle className="flex items-center gap-2 text-sm">\n\t\t\t\t\t\t\t<Badge variant="outline">Free Plan</Badge>\n\t\t\t\t\t\t\t{todoCount}/{FREE_TIER_LIMIT} todos used\n\t\t\t\t\t\t</CardTitle>\n\t\t\t\t\t\t<CardDescription>\n\t\t\t\t\t\t\t{isAtLimit\n\t\t\t\t\t\t\t\t? "You\'ve reached your free plan limit. Upgrade to Pro for unlimited todos!"\n\t\t\t\t\t\t\t\t: `You can create ${FREE_TIER_LIMIT - todoCount} more todos on the free plan.`}\n\t\t\t\t\t\t</CardDescription>\n\t\t\t\t\t</CardHeader>\n\t\t\t\t\t{isAtLimit && (\n\t\t\t\t\t\t<CardContent>\n\t\t\t\t\t\t\t<Button\n\t\t\t\t\t\t\t\tonClick={() => checkoutEmbed.mutate({ slug: "pro" })}\n\t\t\t\t\t\t\t\tsize="sm"\n\t\t\t\t\t\t\t>\n\t\t\t\t\t\t\t\tUpgrade to Pro\n\t\t\t\t\t\t\t</Button>\n\t\t\t\t\t\t</CardContent>\n\t\t\t\t\t)}\n\t\t\t\t</Card>\n\t\t\t)}\n\n',
 				"apps/web/src/routes/__authenticated/todos.tsx: add the Tier Limit Warning card before the Create Todo form",
 			);
-			content = replaceOnce(
+			content = replacePattern(
 				content,
-				"<CardDescription>\n\t\t\t\t\t\tCreate a new todo\n\t\t\t\t\t</CardDescription>",
+				"Create unlimited todos with Pro",
+				/<CardDescription>\s*Create a new todo\s*<\/CardDescription>/,
 				'<CardDescription>\n\t\t\t\t\t\t{hasPro\n\t\t\t\t\t\t\t? "Create unlimited todos with Pro"\n\t\t\t\t\t\t\t: `Free plan: ${FREE_TIER_LIMIT - todoCount} remaining`}\n\t\t\t\t\t</CardDescription>',
 				"apps/web/src/routes/__authenticated/todos.tsx: show the remaining-quota copy in the Add New Todo card description",
 			);
@@ -443,66 +472,71 @@ export async function addPolar(root: string): Promise<void> {
 	});
 
 	// --- P. apps/native: checkout deep link + subscription card ---
-	await editFile(join(root, "apps/native/app/_layout.tsx"), (original) => {
-		let content = original;
-		content = insertBefore(
-			content,
-			'import { Stack } from "expo-router";\n',
-			'import * as Linking from "expo-linking";\n',
-			"apps/native/app/_layout.tsx: import * as Linking from expo-linking",
-		);
-		content = replaceOnce(
-			content,
-			'import { useCallback } from "react";',
-			'import { useCallback, useEffect } from "react";',
-			"apps/native/app/_layout.tsx: add useEffect to the react import",
-		);
-		content = insertAfter(
-			content,
-			"export default function Layout() {\n",
-			'\tconst url = Linking.useURL();\n\n\tuseEffect(() => {\n\t\tif (url) {\n\t\t\tconst parsed = Linking.parse(url);\n\t\t\tif (\n\t\t\t\tparsed.hostname === "checkout-success" ||\n\t\t\t\tparsed.path === "checkout-success"\n\t\t\t) {\n\t\t\t\tconst checkoutId = parsed.queryParams?.checkout_id;\n\t\t\t\tif (typeof checkoutId === "string" && checkoutId.length > 0) {\n\t\t\t\t\tqueryClient.invalidateQueries();\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}, [url]);\n',
-			"apps/native/app/_layout.tsx: add the checkout-success deep-link useEffect (see extras docs)",
-		);
-		return content;
-	});
-
-	await editFile(
-		join(root, "apps/native/app/(tabs)/profile.tsx"),
-		(original) => {
+	if (!hasNative) {
+		console.log("  skipped: apps/native edits (no mobile app)");
+	}
+	if (hasNative) {
+		await editFile(join(root, "apps/native/app/_layout.tsx"), (original) => {
 			let content = original;
+			content = insertBefore(
+				content,
+				'import { Stack } from "expo-router";\n',
+				'import * as Linking from "expo-linking";\n',
+				"apps/native/app/_layout.tsx: import * as Linking from expo-linking",
+			);
 			content = replaceOnce(
 				content,
-				'import { Avatar, Button, Card, Chip, Switch } from "heroui-native";',
-				'import { Avatar, Button, Card, Chip, Spinner, Switch } from "heroui-native";',
-				"apps/native/app/(tabs)/profile.tsx: add Spinner to the heroui-native import",
-			);
-			content = insertBefore(
-				content,
-				"\tPressable,\n",
-				"\tActivityIndicator,\n",
-				"apps/native/app/(tabs)/profile.tsx: add ActivityIndicator to the react-native import",
+				'import { useCallback } from "react";',
+				'import { useCallback, useEffect } from "react";',
+				"apps/native/app/_layout.tsx: add useEffect to the react import",
 			);
 			content = insertAfter(
 				content,
-				'import { useAppTheme } from "@/contexts/app-theme-context";\n',
-				'import { useCheckout, useSubscriptionStatus } from "@/hooks/use-subscription";\n',
-				"apps/native/app/(tabs)/profile.tsx: import useCheckout/useSubscriptionStatus from @/hooks/use-subscription",
-			);
-			content = insertAfter(
-				content,
-				"\tconst { toggleTheme, isDark } = useAppTheme();\n",
-				"\tconst { data: subscriptionStatus, isLoading: isSubLoading } =\n\t\tuseSubscriptionStatus();\n\tconst { checkout, isLoading: isCheckoutLoading } = useCheckout();\n",
-				"apps/native/app/(tabs)/profile.tsx: add the subscription status + checkout hooks",
-			);
-			content = insertBefore(
-				content,
-				"\t\t\t\t{/* Settings */}",
-				'\t\t\t\t{/* Subscription */}\n\t\t\t\t<Card variant="secondary" className="p-6">\n\t\t\t\t\t<Card.Title className="mb-4">Subscription</Card.Title>\n\t\t\t\t\t{isSubLoading ? (\n\t\t\t\t\t\t<View className="items-center py-4">\n\t\t\t\t\t\t\t<Spinner />\n\t\t\t\t\t\t</View>\n\t\t\t\t\t) : (\n\t\t\t\t\t\t<View className="gap-4">\n\t\t\t\t\t\t\t<View className="flex-row items-center justify-between">\n\t\t\t\t\t\t\t\t<Text className="text-foreground text-sm">Current Plan</Text>\n\t\t\t\t\t\t\t\t<Chip\n\t\t\t\t\t\t\t\t\tvariant="soft"\n\t\t\t\t\t\t\t\t\tcolor={\n\t\t\t\t\t\t\t\t\t\tsubscriptionStatus?.isProActive ? "success" : "default"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t>\n\t\t\t\t\t\t\t\t\t<Chip.Label>\n\t\t\t\t\t\t\t\t\t\t{subscriptionStatus?.isProActive ? "Pro" : "Free"}\n\t\t\t\t\t\t\t\t\t</Chip.Label>\n\t\t\t\t\t\t\t\t</Chip>\n\t\t\t\t\t\t\t</View>\n\n\t\t\t\t\t\t\t{subscriptionStatus?.isProActive ? (\n\t\t\t\t\t\t\t\t<Text className="text-muted text-sm">\n\t\t\t\t\t\t\t\t\tYou have access to all Pro features including unlimited todos.\n\t\t\t\t\t\t\t\t</Text>\n\t\t\t\t\t\t\t) : (\n\t\t\t\t\t\t\t\t<View className="gap-3">\n\t\t\t\t\t\t\t\t\t<Text className="text-muted text-sm">\n\t\t\t\t\t\t\t\t\t\tUpgrade to Pro for unlimited todos and advanced features.\n\t\t\t\t\t\t\t\t\t</Text>\n\t\t\t\t\t\t\t\t\t<Button\n\t\t\t\t\t\t\t\t\t\tonPress={() => checkout()}\n\t\t\t\t\t\t\t\t\t\tisDisabled={isCheckoutLoading}\n\t\t\t\t\t\t\t\t\t\tsize="lg"\n\t\t\t\t\t\t\t\t\t>\n\t\t\t\t\t\t\t\t\t\t{isCheckoutLoading ? (\n\t\t\t\t\t\t\t\t\t\t\t<ActivityIndicator color="white" size="small" />\n\t\t\t\t\t\t\t\t\t\t) : (\n\t\t\t\t\t\t\t\t\t\t\t<Button.Label>Upgrade to Pro</Button.Label>\n\t\t\t\t\t\t\t\t\t\t)}\n\t\t\t\t\t\t\t\t\t</Button>\n\t\t\t\t\t\t\t\t</View>\n\t\t\t\t\t\t\t)}\n\t\t\t\t\t\t</View>\n\t\t\t\t\t)}\n\t\t\t\t</Card>\n\n',
-				"apps/native/app/(tabs)/profile.tsx: add the Subscription card before the Settings card",
+				"export default function Layout() {\n",
+				'\tconst url = Linking.useURL();\n\n\tuseEffect(() => {\n\t\tif (url) {\n\t\t\tconst parsed = Linking.parse(url);\n\t\t\tif (\n\t\t\t\tparsed.hostname === "checkout-success" ||\n\t\t\t\tparsed.path === "checkout-success"\n\t\t\t) {\n\t\t\t\tconst checkoutId = parsed.queryParams?.checkout_id;\n\t\t\t\tif (typeof checkoutId === "string" && checkoutId.length > 0) {\n\t\t\t\t\tqueryClient.invalidateQueries();\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}, [url]);\n',
+				"apps/native/app/_layout.tsx: add the checkout-success deep-link useEffect (see extras docs)",
 			);
 			return content;
-		},
-	);
+		});
+
+		await editFile(
+			join(root, "apps/native/app/(tabs)/profile.tsx"),
+			(original) => {
+				let content = original;
+				content = replaceOnce(
+					content,
+					'import { Avatar, Button, Card, Chip, Switch } from "heroui-native";',
+					'import { Avatar, Button, Card, Chip, Spinner, Switch } from "heroui-native";',
+					"apps/native/app/(tabs)/profile.tsx: add Spinner to the heroui-native import",
+				);
+				content = insertBefore(
+					content,
+					"\tPressable,\n",
+					"\tActivityIndicator,\n",
+					"apps/native/app/(tabs)/profile.tsx: add ActivityIndicator to the react-native import",
+				);
+				content = insertAfter(
+					content,
+					'import { useAppTheme } from "@/contexts/app-theme-context";\n',
+					'import { useCheckout, useSubscriptionStatus } from "@/hooks/use-subscription";\n',
+					"apps/native/app/(tabs)/profile.tsx: import useCheckout/useSubscriptionStatus from @/hooks/use-subscription",
+				);
+				content = insertAfter(
+					content,
+					"\tconst { toggleTheme, isDark } = useAppTheme();\n",
+					"\tconst { data: subscriptionStatus, isLoading: isSubLoading } =\n\t\tuseSubscriptionStatus();\n\tconst { checkout, isLoading: isCheckoutLoading } = useCheckout();\n",
+					"apps/native/app/(tabs)/profile.tsx: add the subscription status + checkout hooks",
+				);
+				content = insertBefore(
+					content,
+					"\t\t\t\t{/* Settings */}",
+					'\t\t\t\t{/* Subscription */}\n\t\t\t\t<Card variant="secondary" className="p-6">\n\t\t\t\t\t<Card.Title className="mb-4">Subscription</Card.Title>\n\t\t\t\t\t{isSubLoading ? (\n\t\t\t\t\t\t<View className="items-center py-4">\n\t\t\t\t\t\t\t<Spinner />\n\t\t\t\t\t\t</View>\n\t\t\t\t\t) : (\n\t\t\t\t\t\t<View className="gap-4">\n\t\t\t\t\t\t\t<View className="flex-row items-center justify-between">\n\t\t\t\t\t\t\t\t<Text className="text-foreground text-sm">Current Plan</Text>\n\t\t\t\t\t\t\t\t<Chip\n\t\t\t\t\t\t\t\t\tvariant="soft"\n\t\t\t\t\t\t\t\t\tcolor={\n\t\t\t\t\t\t\t\t\t\tsubscriptionStatus?.isProActive ? "success" : "default"\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t>\n\t\t\t\t\t\t\t\t\t<Chip.Label>\n\t\t\t\t\t\t\t\t\t\t{subscriptionStatus?.isProActive ? "Pro" : "Free"}\n\t\t\t\t\t\t\t\t\t</Chip.Label>\n\t\t\t\t\t\t\t\t</Chip>\n\t\t\t\t\t\t\t</View>\n\n\t\t\t\t\t\t\t{subscriptionStatus?.isProActive ? (\n\t\t\t\t\t\t\t\t<Text className="text-muted text-sm">\n\t\t\t\t\t\t\t\t\tYou have access to all Pro features including unlimited todos.\n\t\t\t\t\t\t\t\t</Text>\n\t\t\t\t\t\t\t) : (\n\t\t\t\t\t\t\t\t<View className="gap-3">\n\t\t\t\t\t\t\t\t\t<Text className="text-muted text-sm">\n\t\t\t\t\t\t\t\t\t\tUpgrade to Pro for unlimited todos and advanced features.\n\t\t\t\t\t\t\t\t\t</Text>\n\t\t\t\t\t\t\t\t\t<Button\n\t\t\t\t\t\t\t\t\t\tonPress={() => checkout()}\n\t\t\t\t\t\t\t\t\t\tisDisabled={isCheckoutLoading}\n\t\t\t\t\t\t\t\t\t\tsize="lg"\n\t\t\t\t\t\t\t\t\t>\n\t\t\t\t\t\t\t\t\t\t{isCheckoutLoading ? (\n\t\t\t\t\t\t\t\t\t\t\t<ActivityIndicator color="white" size="small" />\n\t\t\t\t\t\t\t\t\t\t) : (\n\t\t\t\t\t\t\t\t\t\t\t<Button.Label>Upgrade to Pro</Button.Label>\n\t\t\t\t\t\t\t\t\t\t)}\n\t\t\t\t\t\t\t\t\t</Button>\n\t\t\t\t\t\t\t\t</View>\n\t\t\t\t\t\t\t)}\n\t\t\t\t\t\t</View>\n\t\t\t\t\t)}\n\t\t\t\t</Card>\n\n',
+					"apps/native/app/(tabs)/profile.tsx: add the Subscription card before the Settings card",
+				);
+				return content;
+			},
+		);
+	}
 
 	// --- Q. Env files ---
 	const envInsert = (original: string) =>
