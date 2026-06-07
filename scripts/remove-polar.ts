@@ -290,11 +290,6 @@ export async function removePolar(root: string): Promise<void> {
 				/import\s*\{\s*useCheckoutEmbed,\s*useSubscriptionStatus\s*\}\s*from\s*"@\/hooks\/use-polar";\n/,
 				"",
 			);
-			// Remove Badge import
-			content = content.replace(
-				/import\s*\{\s*Badge\s*\}\s*from\s*"@\/components\/ui\/badge";\n/,
-				"",
-			);
 			// Remove FREE_TIER_LIMIT constant
 			content = content.replace(/const FREE_TIER_LIMIT = 10;\n\n/, "");
 			// Remove subscription hooks and variables
@@ -352,9 +347,80 @@ export async function removePolar(root: string): Promise<void> {
 				"disabled={createTodo.isPending || !title.trim()}",
 			);
 
+			// Remove the Badge import only if nothing else still renders one
+			// (the sync-engine presence badge also uses it)
+			if (!/<Badge\b/.test(content)) {
+				content = content.replace(
+					/import\s*\{\s*Badge\s*\}\s*from\s*"@\/components\/ui\/badge";\n/,
+					"",
+				);
+			}
+
 			return content;
 		},
 	);
+
+	// --- L2. Modify apps/server/src/__tests__/todo-service.test.ts ---
+	// Tier limits are Polar-backed; replace the suite with the polar-free
+	// behaviors (create() loses its context param when tiers are removed).
+	await editFile(
+		join(root, "apps/server/src/__tests__/todo-service.test.ts"),
+		() => `import { TodoService } from "@better-auth-cloudflare-starter/api/services/todo-service";
+import type { TodoRepository } from "@better-auth-cloudflare-starter/db/repositories";
+import { TRPCError } from "@trpc/server";
+import { describe, expect, it } from "vitest";
+
+type Todo = Awaited<ReturnType<TodoRepository["create"]>>;
+
+function fakeTodo(overrides: Partial<Todo> = {}): Todo {
+	return {
+		id: "t1",
+		userId: "u1",
+		title: "test",
+		description: null,
+		completed: false,
+		createdAt: new Date(),
+		updatedAt: new Date(),
+		...overrides,
+	};
+}
+
+function fakeRepository(totalCount: number): TodoRepository {
+	return {
+		create: async (data: Partial<Todo>) => fakeTodo(data),
+		findById: async () => null,
+		findByUserId: async () => [],
+		getCompletedCount: async () => 0,
+		getTotalCount: async () => totalCount,
+		update: async () => null,
+		delete: async () => false,
+		toggleComplete: async () => null,
+	} as unknown as TodoRepository;
+}
+
+describe("TodoService", () => {
+	it("creates todos", async () => {
+		const service = new TodoService(fakeRepository(0));
+		const todo = await service.create("u1", { title: "ok" });
+		expect(todo.title).toBe("ok");
+	});
+
+	it("throws NOT_FOUND when deleting a missing todo", async () => {
+		const service = new TodoService(fakeRepository(0));
+		await expect(service.delete("missing", "u1")).rejects.toBeInstanceOf(
+			TRPCError,
+		);
+	});
+});
+`,
+	);
+
+	// --- L3. Modify apps/server/vitest.config.ts ---
+	await editFile(join(root, "apps/server/vitest.config.ts"), (original) => {
+		let content = original;
+		content = content.replace(/\s*POLAR_[A-Z_]+:\s*"[^"]*",/g, "");
+		return content;
+	});
 
 	// --- M. Modify apps/web/src/routes/index.tsx ---
 	await editFile(join(root, "apps/web/src/routes/index.tsx"), (original) => {
