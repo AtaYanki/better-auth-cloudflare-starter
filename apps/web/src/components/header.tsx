@@ -109,10 +109,7 @@ export default function Header() {
 							<NavigationMenu className="max-w-none *:w-full">
 								<NavigationMenuList className="flex-col items-start gap-0 md:gap-2">
 									{navigationLinks.map((link) => (
-										<NavigationMenuItem
-											key={link.href}
-											className="w-full"
-										>
+										<NavigationMenuItem key={link.href} className="w-full">
 											<NavigationMenuLink
 												href={link.href}
 												className="py-1.5 text-muted-foreground transition-colors hover:text-foreground"

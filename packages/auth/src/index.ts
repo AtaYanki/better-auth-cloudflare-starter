@@ -173,7 +173,7 @@ export const auth = betterAuth({
 			createCustomerOnSignUp: true,
 			enableCustomerPortal: true,
 			use: [
-		checkout({
+				checkout({
 					products: [
 						{
 							productId: POLAR_PRODUCTS.pro.id,

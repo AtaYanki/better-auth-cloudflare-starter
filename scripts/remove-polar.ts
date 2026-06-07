@@ -14,7 +14,16 @@ async function editFile(
 	filePath: string,
 	transform: (content: string) => string,
 ): Promise<void> {
-	const content = await readFile(filePath, "utf-8");
+	let content: string;
+	try {
+		content = await readFile(filePath, "utf-8");
+	} catch {
+		// File may not exist (e.g. removed alongside the mobile app)
+		console.log(
+			`  skipped: ${filePath.split("/").slice(-3).join("/")} (not found)`,
+		);
+		return;
+	}
 	const updated = transform(content);
 	if (updated !== content) {
 		await writeFile(filePath, updated);
@@ -42,7 +51,8 @@ export async function removePolar(root: string): Promise<void> {
 	}
 
 	// --- B. Modify packages/auth/src/index.ts ---
-	await editFile(join(root, "packages/auth/src/index.ts"), (content) => {
+	await editFile(join(root, "packages/auth/src/index.ts"), (original) => {
+		let content = original;
 		// Remove polar imports
 		content = content.replace(
 			/import\s*\{[^}]*\}\s*from\s*"@polar-sh\/better-auth";\n/,
@@ -64,17 +74,18 @@ export async function removePolar(root: string): Promise<void> {
 		);
 
 		// Remove the entire polar({...}) plugin block
-		content = content.replace(
-			/\t\tpolar\(\{[\s\S]*?\n\t\t\}\),\n/,
-			"",
-		);
+		content = content.replace(/\t\tpolar\(\{[\s\S]*?\n\t\t\}\),\n/, "");
 
 		return content;
 	});
 
 	// --- C. Modify packages/auth/package.json ---
-	await editFile(join(root, "packages/auth/package.json"), (content) => {
-		content = content.replace(/\s*"@polar-sh\/better-auth":\s*"catalog:",?\n/, "\n");
+	await editFile(join(root, "packages/auth/package.json"), (original) => {
+		let content = original;
+		content = content.replace(
+			/\s*"@polar-sh\/better-auth":\s*"catalog:",?\n/,
+			"\n",
+		);
 		content = content.replace(/\s*"@polar-sh\/sdk":\s*"catalog:",?\n/, "\n");
 		// Clean up potential trailing comma before closing brace
 		content = content.replace(/,(\s*\})/g, "$1");
@@ -84,7 +95,8 @@ export async function removePolar(root: string): Promise<void> {
 	// --- D. Modify packages/api/src/routers/index.ts ---
 	await editFile(
 		join(root, "packages/api/src/routers/index.ts"),
-		(content) => {
+		(original) => {
+			let content = original;
 			content = content.replace(
 				/import\s*\{\s*subscriptionRouter\s*\}\s*from\s*"\.\/subscription";\n/,
 				"",
@@ -97,7 +109,8 @@ export async function removePolar(root: string): Promise<void> {
 	// --- E. Modify packages/api/src/services/todo-service.ts ---
 	await editFile(
 		join(root, "packages/api/src/services/todo-service.ts"),
-		(content) => {
+		(original) => {
+			let content = original;
 			// Remove POLAR_PRODUCTS import
 			content = content.replace(
 				/import\s*\{[^}]*\}\s*from\s*"[^"]*polar-products";\n/,
@@ -138,26 +151,28 @@ export async function removePolar(root: string): Promise<void> {
 	);
 
 	// --- F. Modify packages/api/src/routers/todo.ts ---
-	await editFile(
-		join(root, "packages/api/src/routers/todo.ts"),
-		(content) => {
-			content = content.replace(
-				"ctx.services.todos.create(ctx.session.user.id, input, ctx)",
-				"ctx.services.todos.create(ctx.session.user.id, input)",
-			);
-			return content;
-		},
-	);
+	await editFile(join(root, "packages/api/src/routers/todo.ts"), (original) => {
+		let content = original;
+		content = content.replace(
+			"ctx.services.todos.create(ctx.session.user.id, input, ctx)",
+			"ctx.services.todos.create(ctx.session.user.id, input)",
+		);
+		return content;
+	});
 
 	// --- G. Modify packages/api/src/context.ts ---
-	await editFile(join(root, "packages/api/src/context.ts"), (content) => {
+	await editFile(join(root, "packages/api/src/context.ts"), (original) => {
+		let content = original;
 		// Remove CustomerStateResult type alias
 		content = content.replace(
 			/type CustomerStateResult = Awaited<ReturnType<typeof auth\.api\.state>>;\n/,
 			"",
 		);
 		// Remove customerState from Variables type
-		content = content.replace(/\t\t\tcustomerState\?: CustomerStateResult;\n/, "");
+		content = content.replace(
+			/\t\t\tcustomerState\?: CustomerStateResult;\n/,
+			"",
+		);
 		// Remove customerState variable declaration
 		content = content.replace(
 			/\tconst customerState = context\.get\("customerState"\) \?\? null;\n/,
@@ -174,7 +189,8 @@ export async function removePolar(root: string): Promise<void> {
 	});
 
 	// --- H. Modify apps/server/src/index.ts ---
-	await editFile(join(root, "apps/server/src/index.ts"), (content) => {
+	await editFile(join(root, "apps/server/src/index.ts"), (original) => {
+		let content = original;
 		// Remove the entire /api/payments/native-success route
 		content = content.replace(
 			/\napp\.get\("\/api\/payments\/native-success"[\s\S]*?\}\);\n/,
@@ -191,7 +207,8 @@ export async function removePolar(root: string): Promise<void> {
 	// --- I. Modify apps/server/src/middleware/auth.ts ---
 	await editFile(
 		join(root, "apps/server/src/middleware/auth.ts"),
-		(content) => {
+		(original) => {
+			let content = original;
 			// Remove the if (session?.user) block that fetches customerState
 			content = content.replace(
 				/\n\t\t\/\/ Get customer state if user is authenticated\n\t\tif \(session\?\.user\) \{[\s\S]*?\} else \{\n\t\t\tc\.set\("customerState", undefined\);\n\t\t\}/,
@@ -207,32 +224,40 @@ export async function removePolar(root: string): Promise<void> {
 	);
 
 	// --- J. Modify apps/web/src/lib/auth-client.ts ---
-	await editFile(
-		join(root, "apps/web/src/lib/auth-client.ts"),
-		(content) => {
-			content = content.replace(
-				/import\s*\{\s*polarClient\s*\}\s*from\s*"@polar-sh\/better-auth";\n/,
-				"",
-			);
-			content = content.replace(/\t\tpolarClient\(\),\n/, "");
-			return content;
-		},
-	);
+	await editFile(join(root, "apps/web/src/lib/auth-client.ts"), (original) => {
+		let content = original;
+		content = content.replace(
+			/import\s*\{\s*polarClient\s*\}\s*from\s*"@polar-sh\/better-auth";\n/,
+			"",
+		);
+		content = content.replace(/\t\tpolarClient\(\),\n/, "");
+		return content;
+	});
+
+	// --- J2. Modify apps/web/package.json ---
+	await editFile(join(root, "apps/web/package.json"), (original) => {
+		let content = original;
+		content = content.replace(
+			/\s*"@polar-sh\/better-auth":\s*"catalog:",?\n/,
+			"\n",
+		);
+		// Clean up potential trailing comma before closing brace
+		content = content.replace(/,(\s*\})/g, "$1");
+		return content;
+	});
 
 	// --- K. Modify apps/web/src/components/header.tsx ---
 	await editFile(
 		join(root, "apps/web/src/components/header.tsx"),
-		(content) => {
+		(original) => {
+			let content = original;
 			// Remove use-polar import
 			content = content.replace(
 				/import\s*\{\s*useCheckoutEmbed,\s*useSubscriptionStatus\s*\}\s*from\s*"@\/hooks\/use-polar";\n/,
 				"",
 			);
 			// Remove Sparkles from lucide-react import
-			content = content.replace(
-				/\tSparkles,\n/,
-				"",
-			);
+			content = content.replace(/\tSparkles,\n/, "");
 			// Remove checkoutEmbed, subscriptionStatus, hasPro declarations
 			content = content.replace(
 				/\tconst checkoutEmbed = useCheckoutEmbed\(\);\n/,
@@ -258,7 +283,8 @@ export async function removePolar(root: string): Promise<void> {
 	// --- L. Modify apps/web/src/routes/__authenticated/todos.tsx ---
 	await editFile(
 		join(root, "apps/web/src/routes/__authenticated/todos.tsx"),
-		(content) => {
+		(original) => {
+			let content = original;
 			// Remove use-polar import
 			content = content.replace(
 				/import\s*\{\s*useCheckoutEmbed,\s*useSubscriptionStatus\s*\}\s*from\s*"@\/hooks\/use-polar";\n/,
@@ -270,10 +296,7 @@ export async function removePolar(root: string): Promise<void> {
 				"",
 			);
 			// Remove FREE_TIER_LIMIT constant
-			content = content.replace(
-				/const FREE_TIER_LIMIT = 10;\n\n/,
-				"",
-			);
+			content = content.replace(/const FREE_TIER_LIMIT = 10;\n\n/, "");
 			// Remove subscription hooks and variables
 			content = content.replace(
 				/\tconst \{ data: subscriptionStatus \} = useSubscriptionStatus\(\{[\s\S]*?\}\);\n/,
@@ -325,22 +348,21 @@ export async function removePolar(root: string): Promise<void> {
 	);
 
 	// --- M. Modify apps/web/src/routes/index.tsx ---
-	await editFile(
-		join(root, "apps/web/src/routes/index.tsx"),
-		(content) => {
-			content = content.replace(
-				/import\s*\{\s*Hero,\s*Pricing\s*\}\s*from\s*"@\/components\/landing";/,
-				'import { Hero } from "@/components/landing";',
-			);
-			content = content.replace(/\t\t\t<Pricing \/>\n/, "");
-			return content;
-		},
-	);
+	await editFile(join(root, "apps/web/src/routes/index.tsx"), (original) => {
+		let content = original;
+		content = content.replace(
+			/import\s*\{\s*Hero,\s*Pricing\s*\}\s*from\s*"@\/components\/landing";/,
+			'import { Hero } from "@/components/landing";',
+		);
+		content = content.replace(/\t\t\t<Pricing \/>\n/, "");
+		return content;
+	});
 
 	// --- N. Modify apps/web/src/components/landing/index.ts ---
 	await editFile(
 		join(root, "apps/web/src/components/landing/index.ts"),
-		(content) => {
+		(original) => {
+			let content = original;
 			content = content.replace(
 				/export\s*\{\s*Pricing\s*\}\s*from\s*"\.\/pricing";\n/,
 				"",
@@ -350,17 +372,15 @@ export async function removePolar(root: string): Promise<void> {
 	);
 
 	// --- O. Modify apps/native/app/_layout.tsx ---
-	await editFile(join(root, "apps/native/app/_layout.tsx"), (content) => {
+	await editFile(join(root, "apps/native/app/_layout.tsx"), (original) => {
+		let content = original;
 		// Remove the entire useEffect block for deep link checkout-success
 		content = content.replace(
 			/\n\tuseEffect\(\(\) => \{\n\t\tif \(url\) \{[\s\S]*?\n\t\}, \[url\]\);\n/,
 			"\n",
 		);
 		// Remove url variable
-		content = content.replace(
-			/\tconst url = Linking\.useURL\(\);\n/,
-			"",
-		);
+		content = content.replace(/\tconst url = Linking\.useURL\(\);\n/, "");
 		// Remove useEffect from import (useCallback remains)
 		content = content.replace(
 			/import\s*\{\s*useCallback,\s*useEffect\s*\}\s*from\s*"react";/,
@@ -377,7 +397,8 @@ export async function removePolar(root: string): Promise<void> {
 	// --- P. Modify apps/native/app/(tabs)/profile.tsx ---
 	await editFile(
 		join(root, "apps/native/app/(tabs)/profile.tsx"),
-		(content) => {
+		(original) => {
+			let content = original;
 			// Remove use-subscription import
 			content = content.replace(
 				/import\s*\{\s*useCheckout,\s*useSubscriptionStatus\s*\}\s*from\s*"@\/hooks\/use-subscription";\n/,
@@ -404,62 +425,43 @@ export async function removePolar(root: string): Promise<void> {
 				'import { Avatar, Button, Card, Chip, Switch } from "heroui-native";',
 			);
 			// Remove ActivityIndicator from react-native import (only used in checkout button)
-			content = content.replace(
-				/\tActivityIndicator,\n/,
-				"",
-			);
+			content = content.replace(/\tActivityIndicator,\n/, "");
 			return content;
 		},
 	);
 
 	// --- Q. Modify env files ---
-	const envTransform = (content: string) => {
+	const envTransform = (original: string) => {
+		let content = original;
 		// Remove Polar comment headers and entries
-		content = content.replace(
-			/\n# Payment Service \(Polar\.sh\)\n/,
-			"\n",
-		);
-		content = content.replace(
-			/POLAR_ACCESS_TOKEN="[^"]*"\n/,
-			"",
-		);
-		content = content.replace(
-			/POLAR_SUCCESS_URL="[^"]*"\n/,
-			"",
-		);
-		content = content.replace(
-			/\n# Polar Product ID\n/,
-			"",
-		);
-		content = content.replace(
-			/POLAR_PRO_PRODUCT_ID="[^"]*"\n/,
-			"",
-		);
+		content = content.replace(/\n# Payment Service \(Polar\.sh\)\n/, "\n");
+		content = content.replace(/POLAR_ACCESS_TOKEN="[^"]*"\n/, "");
+		content = content.replace(/POLAR_SUCCESS_URL="[^"]*"\n/, "");
+		content = content.replace(/\n# Polar Product ID\n/, "");
+		content = content.replace(/POLAR_PRO_PRODUCT_ID="[^"]*"\n/, "");
 		// Clean up double blank lines
 		content = content.replace(/\n{3,}/g, "\n\n");
 		return content;
 	};
 
 	await editFile(join(root, "apps/server/.env.example"), envTransform);
-	try {
-		await editFile(join(root, "apps/server/.env"), envTransform);
-	} catch {
-		// .env may not exist
-	}
+	await editFile(join(root, "apps/server/.env"), envTransform);
 
 	// --- R. Modify apps/server/wrangler.jsonc ---
-	await editFile(join(root, "apps/server/wrangler.jsonc"), (content) => {
+	await editFile(join(root, "apps/server/wrangler.jsonc"), (original) => {
+		let content = original;
 		// Remove POLAR_SUCCESS_URL lines from all vars blocks
-		content = content.replace(
-			/,?\n\s*"POLAR_SUCCESS_URL":\s*"[^"]*"/g,
-			"",
-		);
+		content = content.replace(/,?\n\s*"POLAR_SUCCESS_URL":\s*"[^"]*"/g, "");
 		return content;
 	});
 
 	// --- T. Modify package.json (root) - remove catalog entries ---
-	await editFile(join(root, "package.json"), (content) => {
-		content = content.replace(/\t\t\t"@polar-sh\/better-auth":\s*"[^"]*",?\n/, "");
+	await editFile(join(root, "package.json"), (original) => {
+		let content = original;
+		content = content.replace(
+			/\t\t\t"@polar-sh\/better-auth":\s*"[^"]*",?\n/,
+			"",
+		);
 		content = content.replace(/\t\t\t"@polar-sh\/sdk":\s*"[^"]*",?\n/, "");
 		// Clean up potential trailing comma
 		content = content.replace(/,(\s*\})/g, "$1");
@@ -467,7 +469,9 @@ export async function removePolar(root: string): Promise<void> {
 	});
 
 	// --- S. Regenerate worker types ---
-	console.log("\n  running: bun run cf-typegen (regenerating worker types)...\n");
+	console.log(
+		"\n  running: bun run cf-typegen (regenerating worker types)...\n",
+	);
 	const cfTypegen = Bun.spawnSync(["bun", "run", "cf-typegen"], {
 		cwd: join(root, "apps/server"),
 		stdio: ["inherit", "inherit", "inherit"],

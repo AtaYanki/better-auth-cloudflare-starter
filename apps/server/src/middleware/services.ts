@@ -1,11 +1,5 @@
-import {
-	createServices,
-	type Services,
-} from "@better-auth-cloudflare-starter/api/services";
-import {
-	createRepositories,
-	type Repositories,
-} from "@better-auth-cloudflare-starter/db/repositories";
+import { createServices } from "@better-auth-cloudflare-starter/api/services";
+import { createRepositories } from "@better-auth-cloudflare-starter/db/repositories";
 import { createFactory } from "hono/factory";
 import type { HonoEnv } from "..";
 

@@ -12,7 +12,7 @@
 	"dependencies": {
 		"@better-auth-cloudflare-starter/api": "workspace:*",
 		"@better-auth-cloudflare-starter/auth": "workspace:*",
-		"@daveyplate/better-auth-ui": "^3.3.15",
+		"@daveyplate/better-auth-ui": "3.4.0",
 		"@polar-sh/better-auth": "catalog:",
 		"@radix-ui/react-avatar": "^1.1.11",
 		"@radix-ui/react-navigation-menu": "^1.2.14",

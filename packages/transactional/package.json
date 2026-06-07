@@ -12,13 +12,12 @@
 	},
 	"type": "module",
 	"scripts": {
-		"preview": "email dev --port 3002"
+		"preview": "bunx react-email@5.2.8 dev --port 3002"
 	},
 	"devDependencies": {
 		"@types/react": "19.2.13",
 		"@types/react-dom": "catalog:",
-		"react-email": "catalog:",
-		"@react-email/preview-server": "catalog:",
+		"hono": "catalog:",
 		"@better-auth-cloudflare-starter/config": "workspace:*"
 	},
 	"dependencies": {

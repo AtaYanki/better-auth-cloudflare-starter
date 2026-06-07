@@ -60,13 +60,30 @@ A production-ready full-stack starter template built on Cloudflare Workers, feat
    bun install
    ```
 
-2. **Set up your database:**
+2. **Initialize your project:**
+   ```bash
+   bun run init
+   ```
+
+   The init script renames the project, then asks:
+   - **Project name** (required)
+   - **Bundle ID** (optional) — press Enter to skip; skipping also asks whether to keep the mobile app (`apps/native`). Removing it is the default and saves several hundred MB of dependencies.
+   - **Polar payment integration** (Y/n) — answering `n` strips all Polar code and dependencies.
+
+   For non-interactive use:
+   ```bash
+   bun scripts/init.ts --name my-app [--bundle-id com.me.app] [--keep-native] [--polar | --no-polar]
+   ```
+
+   > **Note:** the root `package.json` pins the better-auth ecosystem to exact versions and overrides `kysely` to `0.28.17` — `@better-auth/kysely-adapter` ≤1.6.14 is broken with kysely 0.29.x ([better-auth#9810](https://github.com/better-auth/better-auth/issues/9810)). Remove the override once the project is on better-auth ≥1.6.15.
+
+3. **Set up your database:**
    - Create a [Neon](https://neon.tech) database
    - Copy your connection string
 
-3. **Configure environment variables:**
+4. **Configure environment variables:**
 
-   Copy the example environment files and fill in your values:
+   The init script creates `.env` files from the examples and generates a secure `BETTER_AUTH_SECRET` automatically (or copy them yourself):
 
    ```bash
    # Copy example files
@@ -97,12 +114,12 @@ A production-ready full-stack starter template built on Cloudflare Workers, feat
    node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
    ```
 
-4. **Set up the database:**
+5. **Set up the database:**
    ```bash
    bun run db:push
    ```
 
-5. **Start development servers:**
+6. **Start development servers:**
    ```bash
    bun run dev
    ```
@@ -348,7 +365,7 @@ This starter uses several architectural patterns for maintainability and scalabi
 - **Components**: Customize shadcn/ui components in `apps/web/src/components/ui/`
 
 ### Authentication
-- **Email templates**: Edit templates in `packages/transactional/emails/`
+- **Email templates**: Edit templates in `packages/transactional/emails/`. Preview them with `bun run preview` in that package — the preview server (react-email, which bundles Next.js, ~250 MB) is intentionally not a project dependency and is installed on demand the first time you run it.
 - **Auth flows**: Modify configuration in `packages/auth/src/index.ts`
 - **UI components**: Customize auth components in `packages/better-auth-ui/`
 

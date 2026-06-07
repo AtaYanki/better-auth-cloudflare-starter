@@ -1,7 +1,9 @@
+import { randomBytes } from "node:crypto";
 import { copyFile, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { Glob } from "bun";
+import { removeNative } from "./remove-native";
 import { removePolar } from "./remove-polar";
 
 const ROOT = join(import.meta.dirname, "..");
@@ -26,10 +28,17 @@ async function fileExists(path: string): Promise<boolean> {
 	}
 }
 
-function parseArgs(): { name?: string; bundleId?: string } {
+function parseArgs(): {
+	name?: string;
+	bundleId?: string;
+	keepNative?: boolean;
+	polar?: boolean;
+} {
 	const args = process.argv.slice(2);
 	let name: string | undefined;
 	let bundleId: string | undefined;
+	let keepNative: boolean | undefined;
+	let polar: boolean | undefined;
 
 	for (let i = 0; i < args.length; i++) {
 		if (args[i] === "--name" && args[i + 1]) {
@@ -38,10 +47,16 @@ function parseArgs(): { name?: string; bundleId?: string } {
 		} else if (args[i] === "--bundle-id" && args[i + 1]) {
 			bundleId = args[i + 1];
 			i++;
+		} else if (args[i] === "--keep-native") {
+			keepNative = true;
+		} else if (args[i] === "--polar") {
+			polar = true;
+		} else if (args[i] === "--no-polar") {
+			polar = false;
 		}
 	}
 
-	return { name, bundleId };
+	return { name, bundleId, keepNative, polar };
 }
 
 async function main() {
@@ -50,6 +65,7 @@ async function main() {
 	const cliArgs = parseArgs();
 	let name = cliArgs.name ?? "";
 	let bundleId = cliArgs.bundleId ?? "";
+	let keepNative = cliArgs.keepNative ?? false;
 
 	// Interactive prompts if args not provided
 	if (!name) {
@@ -85,6 +101,14 @@ async function main() {
 			).trim();
 		}
 
+		// No bundle ID usually means no native app is needed
+		if (!bundleId && !keepNative) {
+			const keepAnswer = (
+				await rl.question("  Keep the mobile app (apps/native)? (y/N): ")
+			).trim();
+			keepNative = keepAnswer.toLowerCase().startsWith("y");
+		}
+
 		rl.close();
 	} else {
 		if (!validateName(name)) {
@@ -96,6 +120,10 @@ async function main() {
 		console.log(`  Name: ${name}`);
 		if (bundleId) console.log(`  Bundle ID: ${bundleId}`);
 	}
+
+	// A bundle ID only makes sense with the mobile app
+	if (bundleId) keepNative = true;
+	if (!keepNative) console.log("  Mobile app (apps/native) will be removed.");
 
 	console.log("");
 
@@ -113,7 +141,8 @@ async function main() {
 		if (
 			filePath.includes("node_modules") ||
 			filePath.includes(".git/") ||
-			filePath.includes("scripts/init.ts")
+			filePath.includes("scripts/init.ts") ||
+			(!keepNative && filePath.includes("apps/native/"))
 		)
 			continue;
 
@@ -131,46 +160,60 @@ async function main() {
 	}
 
 	// Special handling for apps/native/app.json
-	const appJsonPath = join(ROOT, "apps/native/app.json");
-	try {
-		const appJson = JSON.parse(await readFile(appJsonPath, "utf-8"));
-		const expo = appJson.expo;
+	if (keepNative) {
+		const appJsonPath = join(ROOT, "apps/native/app.json");
+		try {
+			const appJson = JSON.parse(await readFile(appJsonPath, "utf-8"));
+			const expo = appJson.expo;
 
-		expo.name = titleCase(name);
-		expo.slug = name;
-		expo.scheme = name;
+			expo.name = titleCase(name);
+			expo.slug = name;
+			expo.scheme = name;
 
-		if (bundleId) {
-			if (expo.android) expo.android.package = bundleId;
-			if (expo.ios) expo.ios.bundleIdentifier = bundleId;
+			if (bundleId) {
+				if (expo.android) expo.android.package = bundleId;
+				if (expo.ios) expo.ios.bundleIdentifier = bundleId;
+			}
+
+			await writeFile(appJsonPath, `${JSON.stringify(appJson, null, "\t")}\n`);
+			console.log("  renamed: apps/native/app.json (expo config)");
+		} catch {
+			console.warn("  warning: could not update apps/native/app.json");
 		}
-
-		await writeFile(appJsonPath, `${JSON.stringify(appJson, null, "\t")}\n`);
-		console.log("  renamed: apps/native/app.json (expo config)");
-	} catch {
-		console.warn("  warning: could not update apps/native/app.json");
 	}
 
 	// --- Optional Polar payment integration ---
 	{
-		const rl2 = createInterface({
-			input: process.stdin,
-			output: process.stdout,
-		});
-		const polarAnswer = (
-			await rl2.question("  Include Polar payment integration? (Y/n): ")
-		).trim();
-		rl2.close();
+		let includePolar = cliArgs.polar;
+		if (includePolar === undefined) {
+			const rl2 = createInterface({
+				input: process.stdin,
+				output: process.stdout,
+			});
+			const polarAnswer = (
+				await rl2.question("  Include Polar payment integration? (Y/n): ")
+			).trim();
+			rl2.close();
+			includePolar = polarAnswer.toLowerCase() !== "n";
+		}
 
-		if (polarAnswer.toLowerCase() === "n") {
+		if (!includePolar) {
 			await removePolar(ROOT);
 			console.log("  Polar payment integration removed.\n");
 		}
 	}
 
+	// --- Optional mobile app removal ---
+	if (!keepNative) {
+		await removeNative(ROOT);
+		console.log("  Mobile app removed.\n");
+	}
+
 	// --- Create .env files from .env.example ---
 	console.log("");
-	const envDirs = ["apps/server", "apps/web", "apps/native"];
+	const envDirs = keepNative
+		? ["apps/server", "apps/web", "apps/native"]
+		: ["apps/server", "apps/web"];
 	for (const dir of envDirs) {
 		const examplePath = join(ROOT, dir, ".env.example");
 		const envPath = join(ROOT, dir, ".env");
@@ -184,6 +227,20 @@ async function main() {
 
 		await copyFile(examplePath, envPath);
 		console.log(`  created: ${dir}/.env`);
+
+		// Generate a secure BETTER_AUTH_SECRET instead of the placeholder
+		const envContent = await readFile(envPath, "utf-8");
+		if (envContent.includes("BETTER_AUTH_SECRET=")) {
+			const secret = randomBytes(32).toString("base64");
+			await writeFile(
+				envPath,
+				envContent.replace(
+					/BETTER_AUTH_SECRET="[^"]*"/,
+					`BETTER_AUTH_SECRET="${secret}"`,
+				),
+			);
+			console.log(`  generated: BETTER_AUTH_SECRET in ${dir}/.env`);
+		}
 	}
 
 	// --- Reinstall dependencies ---
