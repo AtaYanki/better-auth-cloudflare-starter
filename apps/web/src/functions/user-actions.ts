@@ -67,6 +67,9 @@ export const changeUserRole = createServerFn({ method: "POST" })
 		const result = await authClient.admin.setRole({
 			userId: data.userId,
 			role: data.role,
+			fetchOptions: {
+				headers: getRequestHeaders(),
+			},
 		});
 		return result;
 	});

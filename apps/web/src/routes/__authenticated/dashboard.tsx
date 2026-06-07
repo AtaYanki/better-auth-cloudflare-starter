@@ -89,7 +89,7 @@ export const Route = createFileRoute("/__authenticated/dashboard")({
 			});
 		}
 
-		if (context.session.data?.user?.role !== "admin") {
+		if (context.session.user?.role !== "admin") {
 			throw redirect({
 				to: "/",
 			});
